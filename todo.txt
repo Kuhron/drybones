@@ -1,0 +1,9 @@
+- have a line be able to refer to another line in the same or another text, e.g. ref: Kaikai 260, and have the program edit the text files so that the references are all symmetric
+- parse morphology
+- predict parse based on wordform
+- predict gloss based on morpheme
+- for the predictions, have it present options to the user like FLEx does when you click on the dropdown arrows for word analysis or lex entry
+- CLI commands for approving an analysis throughout a text or the whole corpus
+- CLI commands for replacing a partial-word parse/gloss with a new one (e.g. change all -ko-mu 'fut-3sg' to -komu '3sg.fut')
+- search/grep for things, highlight them in colors in the terminal output
+- 
