@@ -5,7 +5,11 @@
 
 import click
 
+from _version import __version__
+
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+VERSION_MESSAGE = "%(prog)s, version %(version)s\nSource: https://github.com/Kuhron/drybones"
 
 
 def add_help(f):
@@ -38,8 +42,11 @@ def print_help(ctx=None, subcommand=None):
 @click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True)
 # @click.option('--count', default=1, help='Number of greetings.')
 # @click.option('--name', prompt='Your name', help='The person to greet.')
+@click.version_option(__version__, "-v", "--version", prog_name="DryBones", message=VERSION_MESSAGE)
 def main():
-    """Welcome to DryBones, a tool for parsing linguistic texts in the command line."""
+    """Welcome to DryBones, a tool for parsing linguistic texts in the command line.\n
+    Author: Wesley Kuhron Jones\n
+    Source: https://github.com/Kuhron/drybones"""
     pass
 
 
@@ -52,11 +59,11 @@ def example():
 main.add_command(example)
 
 
-
 @click.command
 @click.argument("subcommand")
 def help(subcommand=None):
     """This is the help subcommand."""
+    # TODO at some point (low priority), would be nice to have the help messages for `example` subcommand all show usage with `dry example ...` rather than just `example`. `dry help example` shows `dry example ...` but `dry example -h` and `dry example --help` only show `example ...`
     if subcommand is None:
         print_help()
     else:
