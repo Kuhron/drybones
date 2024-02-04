@@ -118,7 +118,7 @@ def print_text_line_by_line(fp, aligned_line_labels):
     for line_set in line_sets:
         print_line_set(line_set, aligned_line_labels)
         print()
-        # input("press enter to continue")
+        input("press enter to continue")
     print(f"finished reading text at {fp}")
 
 
@@ -146,6 +146,7 @@ if __name__ == "__main__":
 
     aligned_line_labels = ["Bl", "Mp", "Lx", "Gl", "Wc"]
     txt_fnames = sorted([x for x in os.listdir(text_dir) if x.endswith(".txt")])
+    random.shuffle(txt_fnames)
     for fname in txt_fnames:
         fp = os.path.join(text_dir, fname)
         print_text_line_by_line(fp, aligned_line_labels)

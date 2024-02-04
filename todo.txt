@@ -6,4 +6,9 @@
 - CLI commands for approving an analysis throughout a text or the whole corpus
 - CLI commands for replacing a partial-word parse/gloss with a new one (e.g. change all -ko-mu 'fut-3sg' to -komu '3sg.fut')
 - search/grep for things, highlight them in colors in the terminal output
-- 
+- change word analysis globally or throughout text
+- change which lines are being edited during parsing
+- search lexicon
+- add lexical items that aren't in any text
+- change which heuristic is used for guessing word analysis: most recently seen in text, most commonly seen in text, most commonly seen overall
+
