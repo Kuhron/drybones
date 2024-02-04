@@ -7,25 +7,11 @@ import click
 
 from _version import __version__
 
-
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+PROG_NAME_FOR_VERSION = "DryBones"
+PROG_NAME_FOR_COMMAND = "dry"
 VERSION_MESSAGE = "%(prog)s, version %(version)s\nSource: https://github.com/Kuhron/drybones"
 
-
-def add_help(f):
-    help_option_dec = click.option("-h", "--help", "show_help", is_flag=True, help="Show help and exit.")
-    name_str = f.__name__
-    doc_str = f.__doc__
-    def f2(*args, show_help=False, **kwargs):
-        if show_help:
-            # ignore everything else and show help and exit
-            help([name_str])  # need list since Click is calling `args = list(args)` and it will splat the string if you just pass the command name directly
-            return
-        f(*args, **kwargs)
-    f2 = help_option_dec(f2)
-    f2.__name__ = name_str
-    f2.__doc__ = doc_str
-    return f2
 
 
 def print_help(ctx=None, subcommand=None):
@@ -42,7 +28,7 @@ def print_help(ctx=None, subcommand=None):
 @click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True)
 # @click.option('--count', default=1, help='Number of greetings.')
 # @click.option('--name', prompt='Your name', help='The person to greet.')
-@click.version_option(__version__, "-v", "--version", prog_name="DryBones", message=VERSION_MESSAGE)
+@click.version_option(__version__, "-v", "--version", prog_name=PROG_NAME_FOR_VERSION, message=VERSION_MESSAGE)
 def main():
     """Welcome to DryBones, a tool for parsing linguistic texts in the command line.\n
     Author: Wesley Kuhron Jones\n
@@ -51,7 +37,6 @@ def main():
 
 
 @click.command
-@add_help
 def example():
     """This is an example subcommand."""
     # example subcommand so one can type `dry subcommand` in a git-like fashion
@@ -63,7 +48,6 @@ main.add_command(example)
 @click.argument("subcommand")
 def help(subcommand=None):
     """This is the help subcommand."""
-    # TODO at some point (low priority), would be nice to have the help messages for `example` subcommand all show usage with `dry example ...` rather than just `example`. `dry help example` shows `dry example ...` but `dry example -h` and `dry example --help` only show `example ...`
     if subcommand is None:
         print_help()
     else:
@@ -77,6 +61,14 @@ def help(subcommand=None):
 main.add_command(help)
 
 
+@click.command
+def version():
+    """Show DryBones version."""
+    click.echo(VERSION_MESSAGE % {"prog": PROG_NAME_FOR_VERSION, "version":__version__})
+main.add_command(version)
+
+
+
 if __name__ == '__main__':
-    main(prog_name="dry")
+    main(prog_name=PROG_NAME_FOR_COMMAND)
 
