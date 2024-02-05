@@ -11,4 +11,6 @@
 - search lexicon
 - add lexical items that aren't in any text
 - change which heuristic is used for guessing word analysis: most recently seen in text, most commonly seen in text, most commonly seen overall
-
+- make config subcommand that can do the following things:
+-- change working directory for FLEx files
+-- change which lines are shown for parsing/reading a text
