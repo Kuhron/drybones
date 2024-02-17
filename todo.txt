@@ -14,3 +14,19 @@
 - make config subcommand that can do the following things:
 -- change working directory for FLEx files
 -- change which lines are shown for parsing/reading a text
+
+- command ideas:
+-- dry text parse Kaikai
+-- dry text show Kaikai
+-- dry text show Kaikai 273
+-- dry text show-unparsed-lines
+-- dry text show-status-all
+-- dry word search "omore" --ignore-diacritics
+-- dry word search "\bkhai"  # use regex always or have a flag for it?
+-- dry gloss search "fire"
+-- dry translation search "^Don't" --ignore-case
+--- maybe instead of having subcommands for word/gloss/translation, I should have field names? since I want this to be pretty extensible for other fields the user might add, like who knows maybe they want a field for speaker name for every line in every text, so should be able to regex search all of those too given the label that the user has put on those lines
+
+- need interactive session for doing the parsing itself, not sure how to convert this to something that a script could do with passing flags, probably best not to worry about this right now and just do the user-facing TTY version of DryBones
+-- so `dry text parse TextName` would open such an interactive session where the user can type through to edit morpheme boundaries, add glosses, choose another existing word analysis, etc. like you can in FLEx
+

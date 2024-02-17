@@ -141,7 +141,7 @@ def is_zero_width(c):
     )
 
 if __name__ == "__main__":
-    text_dir = "/home/kuhron/Horokoi/TextDump/"
+    text_dir = "/home/kuhron/Horokoi/DryBonesTesting/"
     # later can make this configurable or have the user open a project directory
 
     aligned_line_labels = ["Bl", "Mp", "Lx", "Gl", "Wc"]

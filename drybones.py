@@ -6,6 +6,8 @@
 import click
 import sys
 import os
+import shutil
+import yaml
 
 from _version import __version__
 
@@ -18,6 +20,7 @@ PROG_NAME_FOR_VERSION = "DryBones"
 PROG_NAME_FOR_COMMAND = "dry"
 VERSION_MESSAGE = "%(prog)s, version %(version)s\nSource: https://github.com/Kuhron/drybones"
 HOME_DIR = os.environ["HOME"]
+CONFIG_DIR_NAME = ".drybones"
 GLOBAL_CONFIG_FP = os.path.join(HOME_DIR, ".drybones.conf")
 if not os.path.exists(GLOBAL_CONFIG_FP):
     open(GLOBAL_CONFIG_FP, "w").close()
@@ -112,7 +115,11 @@ main.add_command(project)
 
 
 def print_current_project():
-    click.echo("print_current_project not implemented", err=True)
+    cwd = os.getcwd()
+    config_dir = os.path.join(cwd, CONFIG_DIR_NAME)
+    project_config_fp = get_project_config_fp_from_config_dir(config_dir)
+    existing_project_name = get_project_name_from_config_dir(config_dir)
+    click.echo(f"Project '{existing_project_name}' at {config_dir}", err=True)
 
 
 @click.command(name="show")
@@ -125,18 +132,57 @@ project.add_command(project_show)
 @click.command(name="create")
 @click.argument("project_name")
 def project_create(project_name):
-    """Create a new project."""
-    click.echo("project_create not implemented", err=True)
+    """Create a new project in the current directory."""
+    cwd = os.getcwd()
+    config_dir = os.path.join(cwd, CONFIG_DIR_NAME)
+    if os.path.exists(config_dir):
+        existing_project_name = get_project_name_from_config_dir(config_dir)
+        click.echo(f"Cannot create new project here. Project '{existing_project_name}' already exists at {config_dir}", err=True)
+        return
+    os.mkdir(config_dir)
+    d = {"project-name": project_name}
+    config_fp = get_project_config_fp_from_config_dir(config_dir)
+    with open(config_fp, 'w') as outfile:
+        yaml.dump(d, outfile, default_flow_style=False)
+    click.echo(f"Created new project at {config_dir}.", err=True)
 project.add_command(project_create)
 
 
+def get_project_config_fp_from_config_dir(config_dir):
+    return os.path.join(config_dir, "project.yaml")
+
+
+def get_project_name_from_config_dir(config_dir):
+    project_config_fp = get_project_config_fp_from_config_dir(config_dir)
+    if not os.path.exists(project_config_fp):
+        click.echo(f"Project at {config_dir} is misconfigured because it does not have a configuration file.", err=True)
+        return None
+    with open(project_config_fp) as f:
+        contents = yaml.safe_load(f)
+    try:
+        return contents["project-name"]
+    except KeyError:
+        click.echo(f"Project at {config_dir} is misconfigured because its configuration file does not specify `project-name`.", err=True)
+        return None
+
+
 @click.command(name="delete")
-@click.argument("project_name")
-def project_delete(project_name):
-    """Delete a project."""
+def project_delete():
+    """Delete the project in the current directory."""
     # this won't delete the text files from the project dir, it will just make DryBones forget this project exists by removing it from the config files that tell it where to look
     # so you would have to redo the project-specific configuration if you wanted to reinstate it, but the data would all still be there
-    click.echo("project_delete not implemented", err=True)
+    cwd = os.getcwd()
+    config_dir = os.path.join(cwd, CONFIG_DIR_NAME)
+    project_config_fp = get_project_config_fp_from_config_dir(config_dir)
+    existing_project_name = get_project_name_from_config_dir(config_dir)
+    click.echo(f"Deleting project '{existing_project_name}' will remove the configuration files at {config_dir}, but will not remove any of the other files in this directory.\nAre you sure you want to continue deleting this project? Enter 'yes' to continue. Any other response will abort the operation.", err=True)
+    response = input()
+    if response == "yes":
+        click.echo("Deleting project...", err=True)
+        shutil.rmtree(config_dir)
+        click.echo(f"Successfully deleted project '{existing_project_name}'.", err=True)
+    else:
+        click.echo("Aborting.", err=True)
 project.add_command(project_delete)
 
 
