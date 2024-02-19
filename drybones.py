@@ -12,9 +12,6 @@ import yaml
 from _version import __version__
 from GenericObject import GenericObject
 
-from groups.config.commands import config as config_group
-from groups.project.commands import project as project_group
-
 
 STDIN_IS_TTY = sys.stdin.isatty()
 STDOUT_IS_TTY = sys.stdout.isatty()
@@ -30,6 +27,8 @@ GLOBAL_CONFIG_FP = os.path.join(HOME_DIR, ".drybones.conf")
 if not os.path.exists(GLOBAL_CONFIG_FP):
     open(GLOBAL_CONFIG_FP, "w").close()
 
+DEFAULT_ALIGNED_LINE_LABELS = ["Bl", "Mp", "Lx", "Gl", "Wc"]
+
 
 @click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True)
 # @click.option('--count', default=1, help='Number of greetings.')
@@ -37,12 +36,12 @@ if not os.path.exists(GLOBAL_CONFIG_FP):
 @click.version_option(__version__, "-v", "--version", prog_name=PROG_NAME_FOR_VERSION, message=VERSION_MESSAGE)
 @click.pass_context
 def main(ctx):
-    print(f"main {ctx.__dict__ = }\n")
     """Welcome to DryBones, a tool for parsing linguistic texts in the command line.\n
     Author: Wesley Kuhron Jones\n
     Source: https://github.com/Kuhron/drybones"""
     ctx.obj = GenericObject()
-    ctx.obj.CONFIG_DIR_NAME = CONFIG_DIR_NAME
+    ctx.obj.config_dir_name = CONFIG_DIR_NAME
+    ctx.obj.aligned_line_labels = DEFAULT_ALIGNED_LINE_LABELS
 
 
 @click.command
@@ -88,8 +87,16 @@ def print_help(ctx=None, subcommand=None):
     ctx.exit()
 
 
+
+# here add the subcommand modules to main command group
+
+from groups.config import config as config_group
+from groups.project import project as project_group
+from groups.read import read as read_group
+
 main.add_command(config_group)
 main.add_command(project_group)
+main.add_command(read_group)
 
 
 

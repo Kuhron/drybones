@@ -16,15 +16,16 @@
 -- change which lines are shown for parsing/reading a text
 
 - command ideas:
--- dry text parse Kaikai
--- dry text show Kaikai
--- dry text show Kaikai 273
--- dry text show-unparsed-lines
--- dry text show-status-all
--- dry word search "omore" --ignore-diacritics
--- dry word search "\bkhai"  # use regex always or have a flag for it?
--- dry gloss search "fire"
--- dry translation search "^Don't" --ignore-case
+-- dry parse Kaikai
+-- dry show Kaikai
+-- dry show Kaikai 273
+-- dry show-unparsed-lines
+-- dry show-status-all
+-- dry search Bl "omore" --ignore-diacritics  # let's ignore case and diacritics by default (maybe configurable), pass -c for case sensitive and -d for diacritic sensitive
+-- dry search Bl "\bkhai"  # use regex always or have a flag for it? let's use -r/--raw for raw string, regex by default
+--- each of the options case sens/insens, diacritic sens/insens, regex/raw should have its own flag, and if the flag matches the current config default then tell user that it's already doing this by default, and what they can do to switch the config setting
+-- dry search Gl "fire"
+-- dry search Fr "^Don't" --ignore-case
 --- maybe instead of having subcommands for word/gloss/translation, I should have field names? since I want this to be pretty extensible for other fields the user might add, like who knows maybe they want a field for speaker name for every line in every text, so should be able to regex search all of those too given the label that the user has put on those lines
 
 - need interactive session for doing the parsing itself, not sure how to convert this to something that a script could do with passing flags, probably best not to worry about this right now and just do the user-facing TTY version of DryBones

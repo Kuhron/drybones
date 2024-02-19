@@ -1,5 +1,10 @@
+# helper functions for displaying text contents to the user
+
+import click
 import os
-import random
+
+import ReadingUtil as ru
+
 
 
 def get_print_strings_of_line_set(line_set, aligned_line_labels):
@@ -35,7 +40,6 @@ def get_print_strings_of_line_set(line_set, aligned_line_labels):
         delim = after_label_delim if i == 0 else general_delim
         following_delim_width = get_display_width(delim) if i == n_segments_per_line - 1 else 0
         current_sum_width += w
-        # print(f"{i=}, {current_sum_width=}/{n_cols}, {w=}")
 
         # if delimiter and next field both fit, then keep this grouping, otherwise make a new one
         next_sum_width = current_sum_width + following_delim_width + (0 if i == n_segments_per_line - 1 else max_seg_len_by_index[i+1])
@@ -62,7 +66,7 @@ def get_print_strings_of_line_set(line_set, aligned_line_labels):
                     s = label + after_label_delim  # put the label here myself so it will show in each grouping for line sets that are longer than the terminal width
 
                 for i in index_grouping:
-                    s += these_segments[i].ljust(max_seg_len_by_index[i])
+                    s += these_segments[i].ljust(max_seg_len_by_index[i] + sum(is_zero_width(c) for c in these_segments[i]))
                     following_delim = "" if i == index_grouping[-1] else after_label_delim if i == 0 else general_delim
                     s += following_delim
             else:
@@ -79,47 +83,26 @@ def get_print_strings_of_line_set(line_set, aligned_line_labels):
 def print_line_set(line_set, aligned_line_labels):
     strs = get_print_strings_of_line_set(line_set, aligned_line_labels)
     for s in strs:
-        print(s)
-
-
-def get_line_sets_from_file(fp):
-    # adjacent non-blank lines are in the same set
-    lines = get_lines_from_file(fp, with_newlines=False)
-    line_sets = []
-    current_set = []
-    for l in lines:
-        is_blank = l == ""  # hopefully there is no reason to have a line consisting of only whitespace? they should at least all have line labels
-        if is_blank:
-            if current_set == []:
-                pass
-            else:
-                line_sets.append(current_set)
-                current_set = []
-        else:
-            current_set.append(l.split("\t"))
-    if current_set != []:
-        line_sets.append(current_set)
-    return line_sets
-
-
-def get_lines_from_file(fp, with_newlines=False):
-    with open(fp) as f:
-        lines = f.readlines()
-    for l in lines:
-        assert l[-1] == "\n"
-    if with_newlines:
-        return lines
-    else:
-        return [l[:-1] for l in lines]
+        click.echo(s)
 
 
 def print_text_line_by_line(fp, aligned_line_labels):
-    line_sets = get_line_sets_from_file(fp)
+    line_sets = ru.get_line_sets_from_file(fp)
     for line_set in line_sets:
         print_line_set(line_set, aligned_line_labels)
-        print()
-        input("press enter to continue")
-    print(f"finished reading text at {fp}")
+        click.echo()
+        click.prompt("press enter to continue")
+    click.echo(f"finished reading text at {fp}", err=True)
+
+
+def print_line_sets_in_pager(line_sets, aligned_line_labels):
+    s = ""
+    for line_set in line_sets:
+        strs = get_print_strings_of_line_set(line_set, aligned_line_labels)
+        for x in strs:
+            s += x + "\n"
+        s += "\n"
+    click.echo_via_pager(s)
 
 
 def get_display_width(s):
@@ -146,7 +129,6 @@ if __name__ == "__main__":
 
     aligned_line_labels = ["Bl", "Mp", "Lx", "Gl", "Wc"]
     txt_fnames = sorted([x for x in os.listdir(text_dir) if x.endswith(".txt")])
-    random.shuffle(txt_fnames)
     for fname in txt_fnames:
         fp = os.path.join(text_dir, fname)
         print_text_line_by_line(fp, aligned_line_labels)
