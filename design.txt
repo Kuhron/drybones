@@ -1,0 +1,14 @@
+Design principles
+
+General CLI design guidelines:
+- https://clig.dev/
+- https://blog.developer.atlassian.com/10-design-principles-for-delightful-clis/
+
+DO:
+- Base everything on the text files, rather than the text files only being printed out as a representation of some data structure stored elsewhere. Build objects and caches up based on what is in the text files, not the other way around.
+- If there are problems in the text file, like lines within a set being inconsistent lengths (which will break alignment), warn the user in stderr and tell them they need to fix it, and how. If these problems are in lines that don't affect what you're trying to do right now, don't worry about it and go ahead with what you're trying to do. If they do, tell the user the problem and say you can't do this action until the problems are fixed.
+- 
+
+DO NOT:
+- Do not have morphemes/wordforms/etc. that are references like FLEx does. I want to be able to break those dependencies at any time by just going into the text files myself and changing something. DryBones should only infer that two things are the same after the fact, once it loads the corpus. Changing one instance of e.g. "-kha" 'irr.ss' should have no effect on the other instances unless we are doing a mass replace across a line, across a text, or across the whole corpus.
+- 

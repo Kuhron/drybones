@@ -14,11 +14,11 @@
 - make config subcommand that can do the following things:
 -- change working directory for FLEx files
 -- change which lines are shown for parsing/reading a text
+- be able to type diacritics and symbols either directly or using IPA keyboard shortcuts like @3 and DryBones will interpret as meaning acute accent, can have stuff like this configurable as well, can have preset configs for SIL IPA keyboard and LaTeX, and the rest the user can change/define
+- browse analyses by wordform
 
 - command ideas:
 -- dry parse Kaikai
--- dry show Kaikai
--- dry show Kaikai 273
 -- dry show-unparsed-lines
 -- dry show-status-all
 -- dry search Bl "omore" --ignore-diacritics  # let's ignore case and diacritics by default (maybe configurable), pass -c for case sensitive and -d for diacritic sensitive
@@ -27,6 +27,10 @@
 -- dry search Gl "fire"
 -- dry search Fr "^Don't" --ignore-case
 --- maybe instead of having subcommands for word/gloss/translation, I should have field names? since I want this to be pretty extensible for other fields the user might add, like who knows maybe they want a field for speaker name for every line in every text, so should be able to regex search all of those too given the label that the user has put on those lines
+-- dry wc Kaikai  # word count, line count
+-- dry text-info Kaikai  # some info about the text, such as word count, line count, title, whatever else?
+-- dry morpheme show-all  # show all morphemes
+-- dry morpheme search  # search for a morpheme
 
 - need interactive session for doing the parsing itself, not sure how to convert this to something that a script could do with passing flags, probably best not to worry about this right now and just do the user-facing TTY version of DryBones
 -- so `dry text parse TextName` would open such an interactive session where the user can type through to edit morpheme boundaries, add glosses, choose another existing word analysis, etc. like you can in FLEx

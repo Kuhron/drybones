@@ -1,8 +1,3 @@
-# CLI design guidelines:
-# - https://clig.dev/
-# - https://blog.developer.atlassian.com/10-design-principles-for-delightful-clis/
-
-
 import click
 import sys
 import os

@@ -1,38 +1,49 @@
 # helper functions for getting contents of texts for display to user
 # but NOT for actually doing any displaying
 
+from Text import Text
+from Line import Line
+from Row import Row
+from Cell import Cell
 
 
 def get_text_file_from_text_name(text_name):
     return f"{text_name}.txt"
 
 
-def get_line_sets_from_text_name(text_name):
+def get_lines_from_text_name(text_name):
     fp = get_text_file_from_text_name(text_name)
-    return get_line_sets_from_file(fp)
+    return get_lines_from_file(fp)
 
 
-def get_line_sets_from_file(fp):
+def get_lines_from_file(fp):
     # adjacent non-blank lines are in the same set
-    lines = get_lines_from_file(fp, with_newlines=False)
-    line_sets = []
+    raw_lines = get_raw_lines_from_file(fp, with_newlines=False)
+    lines = []
     current_set = []
-    for l in lines:
-        is_blank = l == ""  # hopefully there is no reason to have a line consisting of only whitespace? they should at least all have line labels
+    for l in raw_lines:
+        is_blank = l == ""
         if is_blank:
             if current_set == []:
                 pass
             else:
-                line_sets.append(current_set)
+                lines.append(current_set)
                 current_set = []
         else:
-            current_set.append(l.split("\t"))
+            label, *strs = l.split("\t")
+            cells = []
+            for s in strs:
+                cell = Cell(s.split("-"))
+                cells.append(cell)
+            line_obj = Row(label, cells)
+            current_set.append(line_obj)
     if current_set != []:
-        line_sets.append(current_set)
-    return line_sets
+        lines.append(current_set)
+    lines = [Line(rows) for rows in lines]
+    return lines
 
 
-def get_lines_from_file(fp, with_newlines=False):
+def get_raw_lines_from_file(fp, with_newlines=False):
     with open(fp) as f:
         lines = f.readlines()
     for l in lines:

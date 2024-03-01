@@ -2,22 +2,7 @@
 
 import click
 
-
-
-class Validated:
-    def __init__(self, match):
-        self.match = match
-    
-    def __bool__(self):
-        return True
-
-
-class Invalidated:
-    def __init__(self, options):
-        self.options = options
-
-    def __bool__(self):
-        return False
+from Validation import Validated, Invalidated
 
 
 # copied from https://stackabuse.com/levenshtein-distance-and-text-similarity-in-python/
@@ -73,7 +58,7 @@ def validate_string(s, options, case_sensitive=False):
     
     options_test_to_option = dict(zip(options_test, options))
     if s_test in options_test:
-        return Validated(options_test_to_option[s])
+        return Validated(options_test_to_option[s_test])
     else:
         # return a list of top matches so the function calling this can display them with whatever custom message it wants
         # e.g. "X is not a valid {text name / directory / command}, did you mean {options}?"
