@@ -4,6 +4,7 @@
 from Text import Text
 from Line import Line
 from Row import Row
+from RowLabel import RowLabel
 from Cell import Cell
 
 
@@ -30,7 +31,8 @@ def get_lines_from_file(fp):
                 lines.append(current_set)
                 current_set = []
         else:
-            label, *strs = l.split("\t")
+            label_str, *strs = l.split("\t")
+            label = RowLabel(label_str, strip_colon=True)
             cells = []
             for s in strs:
                 cell = Cell(s.split("-"))
@@ -39,7 +41,7 @@ def get_lines_from_file(fp):
             current_set.append(line_obj)
     if current_set != []:
         lines.append(current_set)
-    lines = [Line(rows) for rows in lines]
+    lines = [Line(i+1, rows) for i, rows in enumerate(lines)]
     return lines
 
 

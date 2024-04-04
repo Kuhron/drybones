@@ -34,11 +34,11 @@ def read(ctx, text_name, line_number):
     
     if line_numbers_to_read is not None:
         lines = [lines[i-1] for i in line_numbers_to_read]
-    aligned_line_labels = ctx.obj.aligned_line_labels
+    labels_of_aligned_rows = ctx.obj.labels_of_aligned_rows
     if len(lines) > 1:
-        pu.print_lines_in_pager(lines, aligned_line_labels)
+        pu.print_lines_in_pager(lines, labels_of_aligned_rows)
     else:
-        pu.print_lines_in_terminal(lines, aligned_line_labels)
+        pu.print_lines_in_terminal(lines, labels_of_aligned_rows)
 
 
 def validate_text_name(text_name):

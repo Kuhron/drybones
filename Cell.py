@@ -16,5 +16,4 @@ class Cell:
         return self.to_str().strip()
     
     def __repr__(self):
-        return repr(self.strs)
-    
+        return f"<Cell {self.strs}>"

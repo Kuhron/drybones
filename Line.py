@@ -4,9 +4,10 @@ from Validation import Validated, Invalidated, Invalidation
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
 
 class Line:
-    def __init__(self, rows):
+    def __init__(self, number, rows):
         assert type(rows) is list
         assert all(type(x) is Row for x in rows)
+        self.number = number
         self.rows = rows
         self.validate_row_lengths()
 

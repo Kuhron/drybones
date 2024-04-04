@@ -1,3 +1,7 @@
+CURRENT TASK AT HAND (finish or abort cleanly before starting something else!):
+- get row labels to print in `read` command output
+
+TODO:
 - have a line be able to refer to another line in the same or another text, e.g. ref: Kaikai 260, and have the program edit the text files so that the references are all symmetric
 - parse morphology
 - predict parse based on wordform
@@ -16,6 +20,7 @@
 -- change which lines are shown for parsing/reading a text
 - be able to type diacritics and symbols either directly or using IPA keyboard shortcuts like @3 and DryBones will interpret as meaning acute accent, can have stuff like this configurable as well, can have preset configs for SIL IPA keyboard and LaTeX, and the rest the user can change/define
 - browse analyses by wordform
+- add project-level and global-level shorthands, e.g. for Horokoi I want to type DS to mean (pa|mana|ne|pua|pia|puna|pina) when searching
 
 - command ideas:
 -- dry parse Kaikai
@@ -34,4 +39,3 @@
 
 - need interactive session for doing the parsing itself, not sure how to convert this to something that a script could do with passing flags, probably best not to worry about this right now and just do the user-facing TTY version of DryBones
 -- so `dry text parse TextName` would open such an interactive session where the user can type through to edit morpheme boundaries, add glosses, choose another existing word analysis, etc. like you can in FLEx
-

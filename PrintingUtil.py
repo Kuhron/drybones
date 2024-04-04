@@ -6,9 +6,7 @@ import os
 import ReadingUtil as ru
 
 
-def get_print_strings_of_line(line, aligned_row_labels):
-    for label in aligned_row_labels:
-        assert ":" not in label, "row labels should be without colons when passed as parameter here"
+def get_print_strings_of_line(line, labels_of_aligned_rows):
     terminal_size = os.get_terminal_size()
     right_padding = 1
     n_cols = terminal_size.columns - right_padding
@@ -21,14 +19,14 @@ def get_print_strings_of_line(line, aligned_row_labels):
         assert len(these_cells) == n_cells_per_row
         cells.append(these_cells)
         label = row.label
-        assert label[-1] == ":", f"row label must end with colon in text file, got {label!r}"
         row_labels.append(label)
-    is_aligned_by_index = {j: row_labels[j][:-1] in aligned_row_labels for j in range(n_rows)}
+    is_aligned_by_index = {j: (row_labels[j].without_colon() in labels_of_aligned_rows) for j in range(n_rows)}
+    # the labels are also aligned
     max_seg_len_by_index = {i: max(get_display_width(these_cells[i]) for j, these_cells in enumerate(cells) if is_aligned_by_index[j] is True) for i in range(n_cells_per_row)}
 
     after_label_delim = " "
     general_delim = " | "  # something clearly dividing but not too wide and not intrusive-looking
-    seg_index_groupings = []  # which indices to group together since they don't exceed the terminal width
+    column_index_groupings = []  # which indices to group together since they don't exceed the terminal width
     # if a single field exceeds terminal width, just put it in a group by itself and let it overflow when printing
     current_sum_width = 0
     current_grouping = []
@@ -47,26 +45,27 @@ def get_print_strings_of_line(line, aligned_row_labels):
             pass
         else:
             # make a new grouping
-            seg_index_groupings.append(current_grouping)
+            column_index_groupings.append(current_grouping)
             current_grouping = []
             current_sum_width = 0
     if current_grouping != []:
-        seg_index_groupings.append(current_grouping)
+        column_index_groupings.append(current_grouping)
+    print(f"{column_index_groupings = }")
 
     strs = []
     group_delim = "- - - - - - - -"
-    for index_grouping in seg_index_groupings:
+    for column_index_grouping in column_index_groupings:
         for j, these_cells in enumerate(cells):
-            label = these_cells[0]
+            label = row.label
             if is_aligned_by_index[j]:
-                if 0 in index_grouping:
+                if 0 in column_index_grouping:
                     s = ""  # the label will be added as a normal field
                 else:
                     s = label + after_label_delim  # put the label here myself so it will show in each grouping for lines that are longer than the terminal width
 
-                for i in index_grouping:
+                for i in column_index_grouping:
                     s += these_cells[i].ljust(max_seg_len_by_index[i] + sum(is_zero_width(c) for c in these_cells[i]))
-                    following_delim = "" if i == index_grouping[-1] else after_label_delim if i == 0 else general_delim
+                    following_delim = "" if i == column_index_grouping[-1] else after_label_delim if i == 0 else general_delim
                     s += following_delim
             else:
                 label = these_cells[0]
@@ -79,37 +78,37 @@ def get_print_strings_of_line(line, aligned_row_labels):
     return strs
 
 
-def get_print_string_of_lines(lines, aligned_row_labels):
+def get_print_string_of_lines(lines, labels_of_aligned_rows):
     s = ""
     for line in lines:
-        strs = get_print_strings_of_line(line, aligned_row_labels)
+        strs = get_print_strings_of_line(line, labels_of_aligned_rows)
         for x in strs:
             s += x + "\n"
         s += "\n"
     return s
 
 
-def print_line(line, aligned_row_labels):
-    strs = get_print_strings_of_line(line, aligned_row_labels)
+def print_line(line, labels_of_aligned_rows):
+    strs = get_print_strings_of_line(line, labels_of_aligned_rows)
     for s in strs:
         click.echo(s)
 
 
-def print_text_line_by_line(fp, aligned_row_labels):
+def print_text_line_by_line(fp, labels_of_aligned_rows):
     lines = ru.get_lines_from_file(fp)
     for line in lines:
-        print_line(line, aligned_row_labels)
+        print_line(line, labels_of_aligned_rows)
         click.echo()
         click.prompt("press enter to continue")
     click.echo(f"finished reading text at {fp}", err=True)
 
 
-def print_lines_in_terminal(lines, aligned_row_labels):
-    click.echo(get_print_string_of_lines(lines, aligned_row_labels))
+def print_lines_in_terminal(lines, labels_of_aligned_rows):
+    click.echo(get_print_string_of_lines(lines, labels_of_aligned_rows))
 
 
-def print_lines_in_pager(lines, aligned_row_labels):
-    click.echo_via_pager(get_print_string_of_lines(lines, aligned_row_labels))
+def print_lines_in_pager(lines, labels_of_aligned_rows):
+    click.echo_via_pager(get_print_string_of_lines(lines, labels_of_aligned_rows))
 
 
 def get_display_width(s):
@@ -134,9 +133,10 @@ if __name__ == "__main__":
     text_dir = "/home/kuhron/Horokoi/DryBonesTesting/"
     # later can make this configurable or have the user open a project directory
 
-    aligned_row_labels = ["Bl", "Mp", "Lx", "Gl", "Wc"]
+    # labels_of_aligned_rows = ["Bl", "Mp", "Lx", "Gl", "Wc"]
+    labels_of_aligned_rows = ["Bl", "Mp", "Gl", "Wc"]  # test what happens when we change which rows are aligned
+
     txt_fnames = sorted([x for x in os.listdir(text_dir) if x.endswith(".txt")])
     for fname in txt_fnames:
         fp = os.path.join(text_dir, fname)
-        print_text_line_by_line(fp, aligned_row_labels)
-
+        print_text_line_by_line(fp, labels_of_aligned_rows)
