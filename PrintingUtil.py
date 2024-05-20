@@ -5,6 +5,7 @@ import os
 import numbers
 
 import ReadingUtil as ru
+from DebuggingUtil import get_counter_string
 
 DEFAULT_ROW_LABEL_FOR_LINE_LABEL = "Ln"
 
@@ -14,16 +15,13 @@ def get_print_string_of_partial_row(row, column_indices):
     # for the line number, can put a parenthetical about which group we're in, e.g. "Kaikai 240 (1/3)"
     # need row label always
     is_line_label = row.label.without_colon() == DEFAULT_ROW_LABEL_FOR_LINE_LABEL  # later should probably configure this instead of hardcoding
-
+    raise NotImplementedError
 
 
 def get_print_strings_of_line(line, labels_of_aligned_rows):
     terminal_size = os.get_terminal_size()
     right_padding = 1
     terminal_width = terminal_size.columns - right_padding
-    print(terminal_width)
-    print("*"*(terminal_width-3)+"321")
-    # input("a")
     n_cells_per_row = max(len(row) for row in line)
     cells = []
     row_labels = []
@@ -44,71 +42,46 @@ def get_print_strings_of_line(line, labels_of_aligned_rows):
     after_label_delim_width = get_display_width(after_label_delim)
     general_delim_width = get_display_width(general_delim)
     column_index_groupings = get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_index, after_label_delim_width, general_delim_width, terminal_width)
-    strs = get_print_strings_helper_using_column_index_groupings(column_index_groupings, cells, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels)
+    strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cells, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels)
+
+    # debug
+    debug_strs = [
+        f"{n_cells_per_row = }, {terminal_width = }",
+        f"{max_seg_len_by_index = }",
+    ]
+    strs = [show_whitespace(s) for s in strs]  # debug
+    strs = debug_strs + strs
+
     return strs
 
 
-def get_print_strings_helper_using_column_index_groupings(column_index_groupings, cells, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels):
+def get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cells, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels):
     strs = []
     group_delim = "- - - - - - - -"
     for column_index_grouping in column_index_groupings:
         for row_i, these_cells in enumerate(cells):
             label = row_labels[row_i].with_colon()
             s = label + after_label_delim
+            # print(f"initial s   = {show_whitespace(s)}")
             if is_aligned_by_index[row_i]:
                 for i in column_index_grouping:
                     s += these_cells[i].ljust(max_seg_len_by_index[i] + sum(is_zero_width(c) for c in these_cells[i]))
-                    following_delim = "" if i == column_index_grouping[-1] else after_label_delim if i == 0 else general_delim
+                    # print(f"plus cell   = {show_whitespace(s)}")
+                    following_delim = "" if i == column_index_grouping[-1] else general_delim
                     s += following_delim
+                    # print(f"plus delim  = {show_whitespace(s)}")
             else:
                 assert sum(len(x) > 0 for x in these_cells) <= 2, f"non-aligned row shouldn't have any cells other than label and content, got {these_cells}"
                 s += after_label_delim.join(these_cells)
+                # print(f"non-aligned = {show_whitespace(s)}")
             strs.append(s)
-            strs.append(get_counter_string(s))
+            # strs.append(get_counter_string(s))  # debug
         strs.append(group_delim)
     assert strs[-1] == group_delim
     strs = strs[:-1]
+    # print(strs)
+    # input("a")
     return strs
-
-
-def get_counter_string(s):
-    # get a string that helps me see how many chars long something is
-    n = len(s)
-    if n == 0:
-        return "0"
-    elif n <= 9:
-        return "123456789"[:len(s)]
-    elif n <= 999:
-        # print the 10s such that their last 0 is at that length, and 5s halfway
-        # e.g. for length 28: ....5...10....5...20....5678
-        n_tens, rem = divmod(n, 10)
-        ten_strs = []
-        for i in range(n_tens):
-            ten_str = str(i+1) + "0"
-            template = "....5....."
-            ten_strs.append(template[:-len(ten_str)] + ten_str)
-        assert all(len(x) == 10 for x in ten_strs)
-        assert all(x[-1] == "0" for x in ten_strs)
-        res = "".join(ten_strs)
-
-        if rem == 0:
-            pass
-        elif rem == 1:
-            # need to put a 1 here but it's right next to the last 10, so we'll hack by changing the 0 to a o
-            res = res[:-1] + "o"
-            res += "1"
-        elif rem < 5:
-            res += "." * (rem - 1) + str(rem)
-        elif rem == 5:
-            res += "....5"
-        elif rem == 6:
-            res += "....s6"
-        else:
-            res += "....5" + "." * (rem - 5 - 1) + str(rem)
-
-        return res
-    else:
-        raise Exception("too long")
 
 
 def get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_index, after_label_delim_width, general_delim_width, terminal_width):
@@ -145,13 +118,13 @@ def get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_in
     if current_grouping != []:
         column_index_groupings.append(current_grouping)
 
-
     print(f"created {column_index_groupings = }")
 
+    # debug
     # for grouping in column_index_groupings:
         # group_cumsum = dict_cumsum(sub_dict(max_seg_len_by_index, grouping), extra_addends=delim_length_after_column_index)
         # print("group cumsum:", group_cumsum)
-    # input("b")
+    
     return column_index_groupings
 
 
@@ -214,6 +187,10 @@ def print_lines_in_pager(lines, labels_of_aligned_rows):
 def get_display_width(s):
     # don't count zero-width chars
     return sum(not is_zero_width(c) for c in s)
+
+
+def show_whitespace(s):
+    return s.replace(" ", "\u00b7").replace("\t", "\u2014").replace("\n", "\u21b5")
 
 
 def is_zero_width(c):
