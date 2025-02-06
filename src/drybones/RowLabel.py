@@ -21,3 +21,10 @@ class RowLabel:
 
     def __repr__(self):
         return f"<RowLabel {repr(self.without_colon())}>"
+    
+    def __str__(self):
+        return self.without_colon()
+
+
+DEFAULT_ALIGNED_ROW_LABEL_STRS = ["Bl", "Mp", "Lx", "Gl", "Wc"]
+DEFAULT_ALIGNED_ROW_LABELS = [RowLabel(s) for s in DEFAULT_ALIGNED_ROW_LABEL_STRS]

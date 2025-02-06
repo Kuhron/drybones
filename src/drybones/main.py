@@ -6,6 +6,7 @@ import yaml
 
 from _version import __version__
 from drybones.GenericObject import GenericObject
+from drybones.RowLabel import DEFAULT_ALIGNED_ROW_LABELS
 
 
 STDIN_IS_TTY = sys.stdin.isatty()
@@ -22,8 +23,6 @@ GLOBAL_CONFIG_FP = os.path.join(HOME_DIR, ".drybones.conf")
 if not os.path.exists(GLOBAL_CONFIG_FP):
     open(GLOBAL_CONFIG_FP, "w").close()
 
-DEFAULT_ALIGNED_ROWS = ["Bl", "Mp", "Lx", "Gl", "Wc"]
-
 
 @click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True)
 # @click.option('--count', default=1, help='Number of greetings.')
@@ -36,7 +35,7 @@ def main(ctx):
     Source: https://github.com/Kuhron/drybones"""
     ctx.obj = GenericObject()
     ctx.obj.config_dir_name = CONFIG_DIR_NAME
-    ctx.obj.labels_of_aligned_rows = DEFAULT_ALIGNED_ROWS
+    ctx.obj.labels_of_aligned_rows = DEFAULT_ALIGNED_ROW_LABELS
 
 
 @click.command
