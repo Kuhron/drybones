@@ -1,6 +1,6 @@
 # a text in the corpus, consisting of a series of lines
 
-from Line import Line
+from drybones.Line import Line
 
 
 class Text:

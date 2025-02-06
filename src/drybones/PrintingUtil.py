@@ -4,8 +4,8 @@ import click
 import os
 import numbers
 
-import ReadingUtil as ru
-from DebuggingUtil import get_counter_string
+import drybones.ReadingUtil as ru
+from drybones.DebuggingUtil import get_counter_string
 
 DEFAULT_ROW_LABEL_FOR_LINE_LABEL = "Ln"
 

@@ -2,11 +2,11 @@
 
 import click
 
-import ReadingUtil as ru
-import PrintingUtil as pu
-import ProjectUtil as ju
-import StringValidation as sv
-from Validation import Validated, Invalidated
+import drybones.ReadingUtil as ru
+import drybones.PrintingUtil as pu
+import drybones.ProjectUtil as ju
+import drybones.StringValidation as sv
+from drybones.Validation import Validated, Invalidated
 
 
 @click.command
@@ -47,7 +47,11 @@ def validate_text_name(text_name):
     if validation is None:
         return None
     elif type(validation) is Invalidated:
-        click.echo(f"Text name {text_name!r} not recognized. Did you mean one of these?\n  " + "\n  ".join(validation.options), err=True)
+        if len(validation.options) > 0:
+            s2 = "Did you mean one of these?\n  " + "\n  ".join(validation.options)
+        else:
+            s2 = "There are no texts in this project yet."
+        click.echo(f"Text name {text_name!r} not recognized. " + s2, err=True)
     return validation
 
 

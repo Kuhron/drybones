@@ -2,7 +2,7 @@
 
 import click
 
-from Validation import Validated, Invalidated
+from drybones.Validation import Validated, Invalidated
 
 
 # copied from https://stackabuse.com/levenshtein-distance-and-text-similarity-in-python/

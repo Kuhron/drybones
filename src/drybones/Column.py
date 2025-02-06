@@ -1,7 +1,7 @@
 # a vertical column in the parsing
 # a wordform and its morphemes and its lexemes and its glosses, etc.
 
-from Cell import Cell
+from drybones.Cell import Cell
 
 
 class Column:

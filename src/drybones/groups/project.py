@@ -6,7 +6,7 @@ import os
 import yaml
 import shutil
 
-import ProjectUtil as ju
+import drybones.ProjectUtil as ju
 
 
 @click.group(no_args_is_help=True)

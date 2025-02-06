@@ -1,11 +1,11 @@
 # helper functions for getting contents of texts for display to user
 # but NOT for actually doing any displaying
 
-from Text import Text
-from Line import Line
-from Row import Row
-from RowLabel import RowLabel
-from Cell import Cell
+from drybones.Text import Text
+from drybones.Line import Line
+from drybones.Row import Row
+from drybones.RowLabel import RowLabel
+from drybones.Cell import Cell
 
 
 def get_text_file_from_text_name(text_name):

@@ -5,7 +5,7 @@ import shutil
 import yaml
 
 from _version import __version__
-from GenericObject import GenericObject
+from drybones.GenericObject import GenericObject
 
 
 STDIN_IS_TTY = sys.stdin.isatty()
@@ -88,11 +88,12 @@ def print_help(ctx=None, subcommand=None):
 from groups.config import config as config_group
 from groups.project import project as project_group
 from groups.read import read as read_group
+from groups.enter import enter as enter_group
 
 main.add_command(config_group)
 main.add_command(project_group)
 main.add_command(read_group)
-
+main.add_command(enter_group)
 
 
 if __name__ == '__main__':

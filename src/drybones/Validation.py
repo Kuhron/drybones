@@ -14,5 +14,5 @@ class Invalidated:
         return False
 
 
-class Invalidation(Exception):
+class InvalidationError(Exception):
     pass

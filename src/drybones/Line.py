@@ -1,5 +1,5 @@
-from Row import Row
-from Validation import Validated, Invalidated, Invalidation
+from drybones.Row import Row
+from drybones.Validation import Validated, Invalidated, InvalidationError
 
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
 
@@ -19,12 +19,11 @@ class Line:
         elif len(lens) > 2:
             # this kind of validation function, where we raise errors, is for drybones-internal stuff, something is not working in the machinery
             # if it's about validating stuff the user is doing, then return Validated or Invalidated objects and print messages to stderr
-            raise Invalidation(f"too many row lengths, need 0 to 2: {lens}")
+            raise InvalidationError(f"too many row lengths, need 0 to 2: {lens}")
         else:
-            assert len(lens) == 2  # I'm paranoid
             one, n = lens
             if one != 1:
-                raise Invalidation(f"lengths should all be 1 or N, where N > 1 and is the same throughout the line, got: {lens}")
+                raise InvalidationError(f"lengths should all be 1 or N, where N > 1 and is the same throughout the line, got: {lens}")
             else:
                 return
 
