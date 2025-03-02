@@ -4,7 +4,7 @@ import os
 import shutil
 import yaml
 
-from _version import __version__
+from drybones._version import __version__
 from drybones.GenericObject import GenericObject
 from drybones.RowLabel import DEFAULT_ALIGNED_ROW_LABELS
 
@@ -84,15 +84,19 @@ def print_help(ctx=None, subcommand=None):
 
 # here add the subcommand modules to main command group
 
-from groups.config import config as config_group
-from groups.project import project as project_group
-from groups.read import read as read_group
-from groups.enter import enter as enter_group
+from drybones.groups.config import config as config_group
+from drybones.groups.project import project as project_group
+from drybones.groups.read import read as read_group
+from drybones.groups.enter import enter as enter_group
+from drybones.groups.text import text as text_group
+from drybones.groups.parse import parse as parse_group
 
 main.add_command(config_group)
 main.add_command(project_group)
 main.add_command(read_group)
 main.add_command(enter_group)
+main.add_command(text_group)
+main.add_command(parse_group)
 
 
 if __name__ == '__main__':
