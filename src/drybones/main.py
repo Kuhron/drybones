@@ -3,6 +3,7 @@ import sys
 import os
 import shutil
 import yaml
+from pathlib import Path
 
 from drybones._version import __version__
 from drybones.GenericObject import GenericObject
@@ -17,11 +18,12 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 PROG_NAME_FOR_VERSION = "DryBones"
 PROG_NAME_FOR_COMMAND = "dry"
 VERSION_MESSAGE = "%(prog)s, version %(version)s\nSource: https://github.com/Kuhron/drybones"
-HOME_DIR = os.environ["HOME"]
-CONFIG_DIR_NAME = ".drybones"
-GLOBAL_CONFIG_FP = os.path.join(HOME_DIR, ".drybones.conf")
-if not os.path.exists(GLOBAL_CONFIG_FP):
-    open(GLOBAL_CONFIG_FP, "w").close()
+HOME_DIR = Path.home()
+DRYBONES_DIR_NAME = ".drybones"
+GLOBAL_CONFIG_FP = HOME_DIR / ".drybones.conf"
+PROJECT_CONFIG_FILE_NAME = "project.yaml"
+if not GLOBAL_CONFIG_FP.exists():
+    GLOBAL_CONFIG_FP.touch()
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True)
@@ -33,17 +35,18 @@ def main(ctx):
     """Welcome to DryBones, a tool for parsing linguistic texts in the command line.\n
     Author: Wesley Kuhron Jones\n
     Source: https://github.com/Kuhron/drybones"""
-    ctx.obj = GenericObject()
-    ctx.obj.config_dir_name = CONFIG_DIR_NAME
+    ctx.obj = GenericObject()  # there's probably a better way to do this but fine for now, so I can pass around global ronfig stuff without ImportErrors
+    ctx.obj.drybones_dir_name = DRYBONES_DIR_NAME
+    ctx.obj.project_config_file_name = PROJECT_CONFIG_FILE_NAME
     ctx.obj.labels_of_aligned_rows = DEFAULT_ALIGNED_ROW_LABELS
 
 
-@click.command
-def example():
-    """This is an example subcommand."""
-    # example subcommand so one can type `dry subcommand` in a git-like fashion
-    click.echo("this is a subcommand")
-main.add_command(example)
+# @click.command
+# def example():
+#     """This is an example subcommand."""
+#     # example subcommand so one can type `dry subcommand` in a git-like fashion
+#     click.echo("this is a subcommand")
+# main.add_command(example)
 
 
 @click.command

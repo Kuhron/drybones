@@ -14,6 +14,7 @@ def text():
 @click.argument("text_name")
 @click.pass_context
 def text_create(ctx, text_name):
-    pass
+    click.echo(f"creating text {text_name!r}")
+    click.echo("text_create not implemented", err=True)
 text.add_command(text_create)
 

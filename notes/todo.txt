@@ -21,6 +21,11 @@ TODO:
 - be able to type diacritics and symbols either directly or using IPA keyboard shortcuts like @3 and DryBones will interpret as meaning acute accent, can have stuff like this configurable as well, can have preset configs for SIL IPA keyboard and LaTeX, and the rest the user can change/define
 - browse analyses by wordform
 - add project-level and global-level shorthands, e.g. for Horokoi I want to type DS to mean (pa|mana|ne|pua|pia|puna|pina) when searching
+- join lines
+- split lines
+- import and export drybones-format text file, start with plain text that is just copied to the texts/ dir for a project, users could in theory edit the text files in there directly much as they could edit git objects, but this is inadvisable, better to do text export, edit it, then text import
+-- later, can import and export texts as other formats e.g. flextext, even something like .tsv or .csv for editing or getting stats in a spreadsheet
+
 
 - command ideas:
 -- dry parse Kaikai
