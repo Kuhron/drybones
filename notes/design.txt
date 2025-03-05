@@ -17,3 +17,9 @@ DO NOT:
 - Do not have morphemes/wordforms/etc. that are references like FLEx does. I want to be able to break those dependencies at any time by just going into the text files myself and changing something. DryBones should only infer that two things are the same after the fact, once it loads the corpus. Changing one instance of e.g. "-kha" 'irr.ss' should have no effect on the other instances unless we are doing a mass replace across a line, across a text, or across the whole corpus.
 
 - 
+
+More tentative ideas:
+
+- could try making REPLs using prompt-toolkit instead of, or in addition to, Click (since it appears Click may not be well suited for making REPLs)
+- probably a better idea here is to mockup basic functionality in pure Python before getting invested in libraries any more than you already are; Click is great for the things you've used it for like creating/deleting a project, displaying usage/help/version, simple one-shot command things like that, but not good for interactive session stuff like how you want parsing to work; better to try to implement a really basic idea of what the parsing workflow will look like in pure Python so you can get the ideas down first and figure out the best library to streamline that (if any) later
+
