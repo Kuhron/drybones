@@ -1,0 +1,131 @@
+N: 1
+Bl: Tsema bahiri zermami.
+Tr: The man is eating the apple.
+
+N: 2
+Bl: Dama pteri rjinosimi.
+Tr: I see you.
+
+N: 3
+Bl: Tsema rjinosigi.
+Tr: The man saw.
+
+N: 4
+Bl: Tseri rjinosiksa.
+Tr: The man will be seen.
+
+N: 5
+Bl: Tsetgo dama pteri rjinosigi.
+Tr: The man showed you to me.
+
+N: 6
+Bl: Kyuma nekto hhopascu bahiri zedogi.
+Tr: The woman ate the apple using her (own) hand.
+
+N: 7
+Bl: Tsekbi nema kyuri rjinosimi.
+Tr: The man wants to see the woman.
+
+N: 8
+Bl: Kyukbi tsema jiri rjinosimi.
+Tr: The woman wants the man to see her.
+
+N: 9
+Bl: Kyukbi tsema neri rjinosimi.
+Tr: The woman wants the man to see himself.
+
+N: 10
+Bl: Kyurya tsema jiri rjinosimi.
+Tr: The woman needs the man to see her.
+
+N: 11
+Bl: Kyurya tsema yari rjinosimi.
+Tr: The woman needs the man to see that person.
+
+N: 12
+Bl: Datgo kyurya tsema jiri rjinosimi.
+Tr: I cause the woman to need the man to see her.
+
+N: 13
+Bl: Datgo kyurya tsema dari rjinosimi.
+Tr: I cause the woman to need the man to see me.
+
+N: 14
+Bl: Srehitgo kyurya tsema jiri rjinosimi.
+Tr: The girl causes the woman to need the man to see her [the girl].
+
+N: 15
+Bl: Srehitgo kyurya tsema kyuri rjinosimi.
+Tr: The girl causes the woman to need the man to see her [the woman].
+
+N: 16
+Bl: Kyurya srehitgo tsema kyuri rjinosimi.
+Tr: The woman needs the girl to show the woman to the man.
+
+N: 17
+Bl: Tseye bahicimi.
+Tr: The man is an apple.
+
+N: 18
+Bl: Tsema zedogi.
+Tr: The man ate.
+
+N: 19
+Bl: Tsema zegicimi.
+Tr: The man has eaten.
+
+N: 20
+Bl: Daha pteye prismacimi.
+Tr: You are good for me.
+
+N: 21
+Bl: Dama pteri dirwisimi.
+Tr: I like you.
+
+N: 22
+Bl: Dawa ptema zermami.
+Tr: Eat! 
+
+N: 23
+Bl: Dapyu nema zermami.
+Tr: I can eat.
+
+N: 24
+Bl: Dama neri yeknurre thharmami.
+Tr: I am going to the house. 
+
+N: 25
+Bl: Seye dapyu nema zermami.
+Tr: I can't eat. (I am not the one who can eat.)
+
+N: 26
+Bl: Dapyu nema seye zermami.
+Tr: I can not eat. (I am able not to eat; I can do something other than eating.)
+
+N: 27
+Bl: Prisma srehima mani bahiri zedogi.
+Tr: The good girl ate the big apple.
+
+N: 28
+Bl: Dama ksiri rjinosimire monoma hekmeri zermami.
+Tr: The dog that I see is eating meat.
+
+N: 29
+Bl: Yama dama zeginuri rbasimi.
+Tr: That person knows that I ate.
+
+N: 30
+Bl: dama zemiza
+Tr: if I ate (in the case that I eat now)
+
+N: 31
+Bl: dama zegiza
+Tr: if I had eaten (in the case that I ate in the past)
+
+N: 32
+Bl: Daye pteksu mocpiwucimi.
+Tr: I am taller than you.
+
+N: 33
+Bl: Daye sagihhocimi.
+Tr: I have money.
