@@ -1,131 +1,319 @@
 N: 1
-Bl: Tsema bahiri zermami.
-Tr: The man is eating the apple.
+Baseline: Tsema bahiri zermami.
+Parse: tse-ma bahi-ri ze-rma-mi
+Gloss: man-NOM apple-ACC eat-PROG-PRS
+Class: noun-afx noun-afx verb-afx-afx
+Wordgloss: man apple is.eating
+Wordclass: noun noun verb
+Translation: The man is eating the apple.
 
 N: 2
-Bl: Dama pteri rjinosimi.
-Tr: I see you.
+Baseline: Dama pteri rjinosimi.
+Parse: da-ma pte-ri rjino-si-mi
+Gloss: 1SG-NOM 2SG-ACC see-STAT-PRS
+Class: pron-afx pron-afx verb-afx-afx
+Wordgloss: I you see
+Wordclass: pron pron verb
+Translation: I see you.
 
 N: 3
-Bl: Tsema rjinosigi.
-Tr: The man saw.
+Baseline: Tsema rjinosigi.
+Translation: The man saw.
 
 N: 4
-Bl: Tseri rjinosiksa.
-Tr: The man will be seen.
+Baseline: Tseri rjinosiksa.
+Translation: The man will be seen.
 
 N: 5
-Bl: Tsetgo dama pteri rjinosigi.
-Tr: The man showed you to me.
+Baseline: Tsetgo dama pteri rjinosigi.
+Translation: The man showed you to me.
 
 N: 6
-Bl: Kyuma nekto hhopascu bahiri zedogi.
-Tr: The woman ate the apple using her (own) hand.
+Baseline: Kyuma nekto hhopascu bahiri zedogi.
+Translation: The woman ate the apple using her (own) hand.
 
 N: 7
-Bl: Tsekbi nema kyuri rjinosimi.
-Tr: The man wants to see the woman.
+Baseline: Tsekbi nema kyuri rjinosimi.
+Translation: The man wants to see the woman.
 
 N: 8
-Bl: Kyukbi tsema jiri rjinosimi.
-Tr: The woman wants the man to see her.
+Baseline: Kyukbi tsema jiri rjinosimi.
+Translation: The woman wants the man to see her.
 
 N: 9
-Bl: Kyukbi tsema neri rjinosimi.
-Tr: The woman wants the man to see himself.
+Baseline: Kyukbi tsema neri rjinosimi.
+Translation: The woman wants the man to see himself.
 
 N: 10
-Bl: Kyurya tsema jiri rjinosimi.
-Tr: The woman needs the man to see her.
+Baseline: Kyurya tsema jiri rjinosimi.
+Translation: The woman needs the man to see her.
 
 N: 11
-Bl: Kyurya tsema yari rjinosimi.
-Tr: The woman needs the man to see that person.
+Baseline: Kyurya tsema yari rjinosimi.
+Translation: The woman needs the man to see that person.
 
 N: 12
-Bl: Datgo kyurya tsema jiri rjinosimi.
-Tr: I cause the woman to need the man to see her.
+Baseline: Datgo kyurya tsema jiri rjinosimi.
+Translation: I cause the woman to need the man to see her.
 
 N: 13
-Bl: Datgo kyurya tsema dari rjinosimi.
-Tr: I cause the woman to need the man to see me.
+Baseline: Datgo kyurya tsema dari rjinosimi.
+Translation: I cause the woman to need the man to see me.
 
 N: 14
-Bl: Srehitgo kyurya tsema jiri rjinosimi.
-Tr: The girl causes the woman to need the man to see her [the girl].
+Baseline: Srehitgo kyurya tsema jiri rjinosimi.
+Translation: The girl causes the woman to need the man to see her [the girl].
 
 N: 15
-Bl: Srehitgo kyurya tsema kyuri rjinosimi.
-Tr: The girl causes the woman to need the man to see her [the woman].
+Baseline: Srehitgo kyurya tsema kyuri rjinosimi.
+Translation: The girl causes the woman to need the man to see her [the woman].
 
 N: 16
-Bl: Kyurya srehitgo tsema kyuri rjinosimi.
-Tr: The woman needs the girl to show the woman to the man.
+Baseline: Kyurya srehitgo tsema kyuri rjinosimi.
+Translation: The woman needs the girl to show the woman to the man.
 
 N: 17
-Bl: Tseye bahicimi.
-Tr: The man is an apple.
+Baseline: Tseye bahicimi.
+Translation: The man is an apple.
 
 N: 18
-Bl: Tsema zedogi.
-Tr: The man ate.
+Baseline: Tsema zedogi.
+Translation: The man ate.
 
 N: 19
-Bl: Tsema zegicimi.
-Tr: The man has eaten.
+Baseline: Tsema zegicimi.
+Translation: The man has eaten.
 
 N: 20
-Bl: Daha pteye prismacimi.
-Tr: You are good for me.
+Baseline: Daha pteye prismacimi.
+Translation: You are good for me.
 
 N: 21
-Bl: Dama pteri dirwisimi.
-Tr: I like you.
+Baseline: Dama pteri dirwisimi.
+Translation: I like you.
 
 N: 22
-Bl: Dawa ptema zermami.
-Tr: Eat! 
+Baseline: Dawa ptema zermami.
+Translation: Eat! 
 
 N: 23
-Bl: Dapyu nema zermami.
-Tr: I can eat.
+Baseline: Dapyu nema zermami.
+Translation: I can eat.
 
 N: 24
-Bl: Dama neri yeknurre thharmami.
-Tr: I am going to the house. 
+Baseline: Dama neri yeknurre thharmami.
+Translation: I am going to the house. 
 
 N: 25
-Bl: Seye dapyu nema zermami.
-Tr: I can't eat. (I am not the one who can eat.)
+Baseline: Seye dapyu nema zermami.
+Translation: I can't eat. (I am not the one who can eat.)
 
 N: 26
-Bl: Dapyu nema seye zermami.
-Tr: I can not eat. (I am able not to eat; I can do something other than eating.)
+Baseline: Dapyu nema seye zermami.
+Translation: I can not eat. (I am able not to eat; I can do something other than eating.)
 
 N: 27
-Bl: Prisma srehima mani bahiri zedogi.
-Tr: The good girl ate the big apple.
+Baseline: Prisma srehima mani bahiri zedogi.
+Translation: The good girl ate the big apple.
 
 N: 28
-Bl: Dama ksiri rjinosimire monoma hekmeri zermami.
-Tr: The dog that I see is eating meat.
+Baseline: Dama ksiri rjinosimire monoma hekmeri zermami.
+Translation: The dog that I see is eating meat.
 
 N: 29
-Bl: Yama dama zeginuri rbasimi.
-Tr: That person knows that I ate.
+Baseline: Yama dama zeginuri rbasimi.
+Translation: That person knows that I ate.
 
 N: 30
-Bl: dama zemiza
-Tr: if I ate (in the case that I eat now)
+Baseline: dama zemiza
+Translation: if I ate (in the case that I eat now)
 
 N: 31
-Bl: dama zegiza
-Tr: if I had eaten (in the case that I ate in the past)
+Baseline: dama zegiza
+Translation: if I had eaten (in the case that I ate in the past)
 
 N: 32
-Bl: Daye pteksu mocpiwucimi.
-Tr: I am taller than you.
+Baseline: Daye pteksu mocpiwucimi.
+Translation: I am taller than you.
 
 N: 33
-Bl: Daye sagihhocimi.
-Tr: I have money.
+Baseline: Daye sagihhocimi.
+Translation: I have money.
+
+N: 34
+Baseline: Dama rrowawasiri hmasimi.
+Translation: I love languages.
+
+N: 35
+Baseline: Ptema yama dari hmaminuri rbasimi.
+Translation: You know that that person loves me.
+
+N: 36
+Baseline: Yama dama sjeginuri gurudogi.
+Translation: That person heard that I spoke.
+
+N: 37
+Baseline: Dama ksiri goragire sadiye sbibicimi.
+Translation: The sand that I touched is cold.
+
+N: 38
+Baseline: Dama sbibi sadiri goradogi.
+Translation: I touched the cold sand.
+
+N: 39
+Baseline: Daye kamecimi.
+Translation: I am a volcano.
+
+N: 40
+Baseline: Kameye dawasiraza kakrocimi.
+Translation: The volcano is far from us.
+
+N: 41
+Baseline: Dama kakro kamewasiri hmasimi.
+Translation: I love faraway volcanoes.
+
+N: 42
+Baseline: Dama ksiye kamerazacimire sadiri rjinodogi.
+Translation: I saw the sand which is from the volcano.
+
+N: 43
+Baseline: Dama pteye kamecinuri yupjesimi.
+Translation: I believe that you are a volcano.
+
+N: 44
+Baseline: Sadiye kamerjicimi.
+Translation: Sand is in/at the volcano.
+
+N: 45
+Baseline: Dama ptema ksirji sjegire zadari sercusimi.
+Translation: I remember when you spoke.
+
+N: 46
+Baseline: Yama kameye jetepnenurji sjermagi.
+Translation: That person was speaking when the volcano erupted.
+
+N: 47
+Baseline: Dama sadiye kzacinuri sjedogi.
+Translation: I said that the sand is/was hot.
+
+N: 48
+Baseline: Ptema hma zadaraza sjermami.
+Translation: You have been speaking ever since then.
+
+N: 49
+Baseline: Yama ptema ksiri rjinogire jeteri rjinodogi.
+Translation: That person saw the fire that you saw.
+
+N: 50
+Baseline: Datgo hekmeye jetepnegi.
+Translation: I burned the meat.
+
+N: 51
+Baseline: Dama hma rrowaye prismacinutgo prirmami.
+Translation: I am smiling because that language is good.
+
+N: 52
+Baseline: Ptetgo dama pridogi.
+Translation: You made me smile.
+
+N: 53
+Baseline: Yatgo daye krasupnegi.
+Translation: That person turned me into an alligator.
+
+N: 54
+Baseline: Dama nema hekmeri zeginuraza prirmami.
+Translation: I have been smiling ever since I ate the meat.
+
+N: 55
+Baseline: Krasuma nema hekmeri rjinoginutgo prirmami.
+Translation: The alligator is smiling because it saw the meat.
+
+N: 56
+Baseline: Ptema kamerre kojarmami.
+Translation: You are walking to the volcano.
+
+N: 57
+Baseline: Yama darre sjesimi.
+Translation: That person speaks to me.
+
+N: 58
+Baseline: Dama ptema daraza kojaginurre sjesigi.
+Translation: I spoke until you walked away.
+
+N: 59
+Baseline: Dama ptema darre kojaginuraza sjermagi.
+Translation: I was speaking ever since you walked toward me.
+
+N: 60
+Baseline: Kameye dama sjeginurre jetepnegi.
+Parse: kame-ye da-ma sje-gi-nu-rre jete-pne-gi
+Gloss: volcano-TOPIC 1SG-NOM speak-PST-NMZR-ALLAT fire-INCH-PST
+Class: noun-afx pron-afx verb-afx-afx-afx noun-afx-afx
+Wordgloss: volcano I until.spoke erupted
+Wordclass: noun pron adv verb
+Translation: The volcano erupted until I spoke.
+
+N: 61
+Baseline: Krasuma pripnemi.
+Translation: The alligator is starting to smile.
+
+N: 62
+Baseline: Ptema darre kojapnemi.
+Translation: You are starting to walk toward me.
+
+N: 63
+Baseline: Krasuma ksiri zegire hekmeye prismacigi.
+Parse: krasu-ma ksi-ri ze-gi-re hekme-ye prisma-ci-gi
+Gloss: alligator-NOM REL.PRON-ACC eat-PST-RELZR meat-TOPIC good-be-PST
+Class: noun-afx pron-afx verb-afx-afx noun-afx adj-afx>v-afx
+Wordgloss: alligator which which.ate meat was.good
+Wordclass: noun pron adj noun verb
+Translation: The meat that the alligator ate was good.
+
+N: 64
+Baseline: Ksiye jetepnegire kamema sjedogi.
+Translation: The volcano that erupted spoke.
+
+N: 65
+Baseline: Ptema sjeginuye prismacimi.
+Translation: It is good that you spoke.
+
+N: 66
+Baseline: Dama ptema sadiri hmaminuri nahhidogi.
+Translation: I learned that you love sand.
+
+N: 67
+Baseline: Daye jetepneginuye pmejicimi.
+Translation: It is bad that I got burned.
+
+N: 68
+Baseline: Dama satmama ktaminuri yupjesimi.
+Translation: I think the rain is falling.
+
+N: 69
+Baseline: Yama ptema ksiye jetepnegire kamerre ktaginuye pmejicinuri yupjesimi.
+Translation: That person thinks it is bad that you fell into the volcano which erupted.
+
+N: 70
+Baseline: Dasdi ptema yeknurre kojadogi.
+Translation: You and I walked to the house.
+
+N: 71
+Baseline: Ptesdi nekto yeknuye prismacimi.
+Translation: You and your house are good.
+
+N: 72
+Baseline: Dama ptema kojaginusdi ktaginuri rbasimi.
+Translation: I know that you walked and fell.
+
+N: 73
+Baseline: Krasuma hekmesdi cukduri zedogi.
+Translation: The alligator ate the meat and the plate.
+
+N: 74
+Baseline: Dama kojadogi kimi ktadogi.
+Translation: I walked and fell.
+
+N: 75
+Baseline: Ptema kojarmami kimi nerre sjermami.
+Translation: You are walking and talking to yourself.

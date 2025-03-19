@@ -1,5 +1,5 @@
 CURRENT TASK AT HAND (finish or abort cleanly before starting something else!):
-- fix wrapping problem (lines are not wrapping soon enough, are overflowing in pager)
+- 
 
 TODO:
 - have a line be able to refer to another line in the same or another text, e.g. ref: Kaikai 260, and have the program edit the text files so that the references are all symmetric
@@ -25,7 +25,7 @@ TODO:
 - split lines
 - import and export drybones-format text file, start with plain text that is just copied to the texts/ dir for a project, users could in theory edit the text files in there directly much as they could edit git objects, but this is inadvisable, better to do text export, edit it, then text import
 -- later, can import and export texts as other formats e.g. flextext, even something like .tsv or .csv for editing or getting stats in a spreadsheet
-
+- tags for lines for things like grammar phenomena, e.g. #focus, suggest similar known tags (or even completion as you type) or prompt to make a new one
 
 - command ideas:
 -- dry parse Kaikai

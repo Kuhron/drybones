@@ -1,4 +1,5 @@
-from collections import Counter, defaultdict
+import random
+from collections import Counter, defaultdict, OrderedDict
 from pathlib import Path
 from typing import List, Dict
 
@@ -24,6 +25,9 @@ def get_morphemes_from_user(word):
     except ValueError:
         pass
     print()
+
+    if parse == "":
+        parse = word
     return parse
 
 
@@ -42,6 +46,9 @@ def get_gloss_from_user(morpheme):
     except ValueError:
         pass
     print()
+
+    if gloss == "":
+        gloss = "?"
     return gloss
 
 
@@ -82,7 +89,7 @@ def get_lines_from_text_file(text_file: Path) -> List[Dict]:
     line_groups = contents.split("\n\n")
     for line_group in line_groups:
         rows = line_group.split("\n")
-        row_by_label = {}
+        row_by_label = OrderedDict()
         for row in rows:
             if row == "":
                 continue
@@ -93,21 +100,58 @@ def get_lines_from_text_file(text_file: Path) -> List[Dict]:
     return lines
 
 
+
 if __name__ == "__main__":
     text_file = Path.cwd() / "ProtoConticExampleSentences.txt"
+
+    number_label = "N"
+    baseline_label = "Baseline"
+    parse_label = "Parse"
+    morpheme_gloss_label = "Gloss"
+    morpheme_class_label = "Class"
+    word_gloss_label = "Wordgloss"
+    word_class_label = "Wordclass"
+    translation_label = "Translation"
+
+    labels = [
+        number_label,
+        parse_label,
+        morpheme_gloss_label,
+        morpheme_class_label,
+        word_gloss_label,
+        word_class_label,
+        translation_label,
+    ]
+
     lines = get_lines_from_text_file(text_file)
+    random.shuffle(lines)
+
+    # TODO config for if the orthography is case-sensitive
+    # by default assume not case-sensitive, so set everything in baseline to lowercase
+    orthography_case_sensitive = False
 
     for line in lines:
-        print(line)
-        print(f"{line['N']}. {line['Bl']}")
-        print(line["Tr"])
+        print(f"{line[number_label]}. {line[baseline_label]}")
+        print(line[translation_label])
         print()
 
-        words = line["Bl"].split()
+        words = line[baseline_label].split()
         for word in words:
+            if orthography_case_sensitive:
+                raise ValueError("can't handle case-sensitive orthographies yet")
+            else:
+                word = word.lower()
             parse = get_morphemes_from_user(word)
             known_parses_by_word[word][parse] += 1
+            glosses_this_word = []
             for morpheme in parse.split("-"):
                 gloss = get_gloss_from_user(morpheme)
                 known_glosses_by_morpheme[morpheme][gloss] += 1
-    
+                glosses_this_word.append(gloss)
+            print("received glosses:", "-".join(glosses_this_word))
+            print()
+        print()
+
+    # TODO print the edited line with rows in order
+    # don't enforce the input being in a certain row order, but could just copy the orders we've seen in the input file
+    # 
