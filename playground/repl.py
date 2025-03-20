@@ -16,6 +16,7 @@ known_glosses_by_morpheme = defaultdict(Counter)
 UNKNOWN_GLOSS = "?"
 MORPHEME_DELIMITER = "-"
 WORD_DELIMITER = " "
+COMMAND_CHAR = ":"
 
 RED = lambda s: Fore.RED + s + Style.RESET_ALL
 GREEN = lambda s: Fore.GREEN + s + Style.RESET_ALL
@@ -144,6 +145,9 @@ def print_baseline(number, baseline_text, words=None, word_index_to_highlight=No
     print(f"{number}. {text}")
 
 
+def is_command(s: str) -> bool:
+    return s.startswith(COMMAND_CHAR)
+
 
 
 if __name__ == "__main__":
@@ -206,6 +210,10 @@ if __name__ == "__main__":
             print()
         print()
 
-    # TODO print the edited line with rows in order
+    # TODO print the edited line with rows in order, to some output file that could then [replace / be merged with] the input to update it
     # don't enforce the input being in a certain row order, but could just copy the orders we've seen in the input file
     
+    # TODO commands to implement when reading user input (no matter what input we are expecting, if we get a command then go do that instead)
+    # :b = go back
+    # :{number} = go re-parse line of this number
+    # :q = quit

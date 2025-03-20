@@ -3,24 +3,21 @@ CURRENT TASK AT HAND (finish or abort cleanly before starting something else!):
 
 TODO:
 - have a line be able to refer to another line in the same or another text, e.g. ref: Kaikai 260, and have the program edit the text files so that the references are all symmetric
-- parse morphology
-- predict parse based on wordform
-- predict gloss based on morpheme
-- for the predictions, have it present options to the user like FLEx does when you click on the dropdown arrows for word analysis or lex entry
+- for the parse and gloss predictions, have it present options to the user like FLEx does when you click on the dropdown arrows for word analysis or lex entry
 - CLI commands for approving an analysis throughout a text or the whole corpus
 - CLI commands for replacing a partial-word parse/gloss with a new one (e.g. change all -ko-mu 'fut-3sg' to -komu '3sg.fut')
 - search/grep for things, highlight them in colors in the terminal output
 - change word analysis globally or throughout text
-- change which lines are being edited during parsing
+- change which rows are being edited during parsing
 - search lexicon
 - add lexical items that aren't in any text
 - change which heuristic is used for guessing word analysis: most recently seen in text, most commonly seen in text, most commonly seen overall
 - make config subcommand that can do the following things:
 -- change working directory for FLEx files
--- change which lines are shown for parsing/reading a text
+-- change which rows are shown for parsing/reading a text
 - be able to type diacritics and symbols either directly or using IPA keyboard shortcuts like @3 and DryBones will interpret as meaning acute accent, can have stuff like this configurable as well, can have preset configs for SIL IPA keyboard and LaTeX, and the rest the user can change/define
 - browse analyses by wordform
-- add project-level and global-level shorthands, e.g. for Horokoi I want to type DS to mean (pa|mana|ne|pua|pia|puna|pina) when searching
+- add project-level and global-level shorthands, e.g. for Hurukui I want to type DS to mean (pa|mana|ne|pua|pia|puna|pina) when searching
 - join lines
 - split lines
 - import and export drybones-format text file, start with plain text that is just copied to the texts/ dir for a project, users could in theory edit the text files in there directly much as they could edit git objects, but this is inadvisable, better to do text export, edit it, then text import
@@ -41,6 +38,7 @@ TODO:
 -- dry text-info Kaikai  # some info about the text, such as word count, line count, title, whatever else?
 -- dry morpheme show-all  # show all morphemes
 -- dry morpheme search  # search for a morpheme
+-- reorder the rows, and/or enforce a certain row order, on a text file, e.g. `dry reorder N,Baseline,Gloss,Translation`, should warn if it omits any existing lines (don't let it delete omitted ones, just put them sorted at the end or something), should show user the existing line labels beforehand, can also make it do some default order based on order of first appearance in the file
 
 - need interactive session for doing the parsing itself, not sure how to convert this to something that a script could do with passing flags, probably best not to worry about this right now and just do the user-facing TTY version of DryBones
 -- so `dry text parse TextName` would open such an interactive session where the user can type through to edit morpheme boundaries, add glosses, choose another existing word analysis, etc. like you can in FLEx
