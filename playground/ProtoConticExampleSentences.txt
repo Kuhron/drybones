@@ -114,6 +114,11 @@ Translation: I can not eat. (I am able not to eat; I can do something other than
 
 N: 27
 Baseline: Prisma srehima mani bahiri zedogi.
+Parse: prisma srehi-ma mani bahi-ri ze-do-gi
+Gloss: good girl-NOM big apple-ACC eat-MOM-PST
+Class: adj noun-afx adj noun-afx verb-afx-afx
+Wordgloss: good girl big apple ate
+Wordclass: adj noun adj noun verb
 Translation: The good girl ate the big apple.
 
 N: 28

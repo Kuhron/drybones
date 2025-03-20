@@ -3,10 +3,26 @@ from collections import Counter, defaultdict, OrderedDict
 from pathlib import Path
 from typing import List, Dict
 
+# terminal color printing
+from colorama import init as colorama_init
+from colorama import Fore, Back, Style
+colorama_init()
+
 
 # TODO load known parses and glosses from the corpus
 known_parses_by_word = defaultdict(Counter)
 known_glosses_by_morpheme = defaultdict(Counter)
+
+UNKNOWN_GLOSS = "?"
+MORPHEME_DELIMITER = "-"
+WORD_DELIMITER = " "
+
+RED = lambda s: Fore.RED + s + Style.RESET_ALL
+GREEN = lambda s: Fore.GREEN + s + Style.RESET_ALL
+YELLOW = lambda s: Fore.YELLOW + s + Style.RESET_ALL
+RED_BACK = lambda s: Back.RED+Fore.BLACK + s + Style.RESET_ALL
+GREEN_BACK = lambda s: Back.GREEN+Fore.BLACK + s + Style.RESET_ALL
+YELLOW_BACK = lambda s: Back.YELLOW+Fore.BLACK + s + Style.RESET_ALL
 
 
 def get_morphemes_from_user(word):
@@ -17,18 +33,21 @@ def get_morphemes_from_user(word):
                              string_if_no_options="no parses known for this word",
                              string_if_options="top parse candidates:",
     )
-    parse = input("morphemes: ")
+    inp = input("morphemes: ")
     # TODO if there are dashes used in the orthography and the user wants them in the morpheme form, can escape with backslash
     try:
-        i = int(parse)
-        parse = ordered_suggested_parses[i-1]  # because they are shown to user starting from 1
+        i = int(inp)
+        parse_str = ordered_suggested_parses[i-1]  # because they are shown to user starting from 1
     except ValueError:
-        pass
+        parse_str = inp
+    except IndexError:
+        print("oops, that number is out of range")
+        return get_morphemes_from_user(word)
     print()
 
-    if parse == "":
-        parse = word
-    return parse
+    if inp == "":
+        parse_str = word
+    return parse_str.split(MORPHEME_DELIMITER)
 
 
 def get_gloss_from_user(morpheme):
@@ -48,7 +67,7 @@ def get_gloss_from_user(morpheme):
     print()
 
     if gloss == "":
-        gloss = "?"
+        gloss = UNKNOWN_GLOSS
     return gloss
 
 
@@ -100,6 +119,32 @@ def get_lines_from_text_file(text_file: Path) -> List[Dict]:
     return lines
 
 
+def print_baseline(number, baseline_text, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None):
+    highlight_word = word_index_to_highlight is not None
+    highlight_morpheme = morpheme_index_to_highlight is not None
+    if highlight_word and highlight_morpheme:
+        before_words = words[:word_index_to_highlight]
+        after_words = words[word_index_to_highlight+1:]
+        morpheme_strs = [RED(x) if i == morpheme_index_to_highlight else GREEN(x) for i,x in enumerate(morphemes)]
+        word_str = "".join(morpheme_strs)
+        word_strs = before_words + [word_str] + after_words
+        text = WORD_DELIMITER.join(word_strs)
+    elif highlight_word and not highlight_morpheme:
+        before_words = words[:word_index_to_highlight]
+        after_words = words[word_index_to_highlight+1:]
+        word = words[word_index_to_highlight]
+        word_str = GREEN(word)
+        word_strs = before_words + [word_str] + after_words
+        text = WORD_DELIMITER.join(word_strs)
+    elif not highlight_word and highlight_morpheme:
+        raise ValueError("shouldn't be highlighting a morpheme without highlighting a word")
+    else:
+        text = baseline_text
+    
+    print(f"{number}. {text}")
+
+
+
 
 if __name__ == "__main__":
     text_file = Path.cwd() / "ProtoConticExampleSentences.txt"
@@ -131,27 +176,36 @@ if __name__ == "__main__":
     orthography_case_sensitive = False
 
     for line in lines:
-        print(f"{line[number_label]}. {line[baseline_label]}")
-        print(line[translation_label])
+        number = line[number_label]
+        baseline_text = line[baseline_label]
+        words = baseline_text.split()
+        translation = line[translation_label]
+
+        print_baseline(number, baseline_text)
+        print(translation)
         print()
 
-        words = line[baseline_label].split()
-        for word in words:
+        for i, word in enumerate(words):
+            print_baseline(number, baseline_text, words, i)
+            print(translation)
             if orthography_case_sensitive:
                 raise ValueError("can't handle case-sensitive orthographies yet")
             else:
                 word = word.lower()
-            parse = get_morphemes_from_user(word)
+            morphemes = get_morphemes_from_user(word)
+            parse = MORPHEME_DELIMITER.join(morphemes)
             known_parses_by_word[word][parse] += 1
             glosses_this_word = []
-            for morpheme in parse.split("-"):
+            for j, morpheme in enumerate(morphemes):
+                print_baseline(number, baseline_text, words, i, morphemes, j)
+                print(translation)
                 gloss = get_gloss_from_user(morpheme)
                 known_glosses_by_morpheme[morpheme][gloss] += 1
                 glosses_this_word.append(gloss)
-            print("received glosses:", "-".join(glosses_this_word))
+            print("received glosses:", MORPHEME_DELIMITER.join(glosses_this_word))
             print()
         print()
 
     # TODO print the edited line with rows in order
     # don't enforce the input being in a certain row order, but could just copy the orders we've seen in the input file
-    # 
+    
