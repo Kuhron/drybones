@@ -1,10 +1,15 @@
+from typing import List
+
 from drybones.Row import Row
 from drybones.Validation import Validated, Invalidated, InvalidationError
 
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
 
 class Line:
-    def __init__(self, number, rows):
+    BEFORE_LINE = "┌------------┐\n"
+    AFTER_LINE  = "└------------┘\n"
+
+    def __init__(self, number: int, rows: List[Row]):
         assert type(rows) is list
         assert all(type(x) is Row for x in rows)
         self.number = number

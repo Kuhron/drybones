@@ -64,7 +64,10 @@ def get_gloss_from_user(morpheme):
         i = int(gloss)
         gloss = ordered_suggested_glosses[i-1]  # because they are shown to user starting from 1
     except ValueError:
-        pass
+        pass  # use whatever user gave for the gloss
+    except IndexError:
+        print("oops, that number is out of range")
+        return get_gloss_from_user(morpheme)
     print()
 
     if gloss == "":
@@ -90,7 +93,7 @@ def get_ordered_suggested_glosses(morpheme: str, n: int=None) -> List[str]:
         return lst
 
 
-def show_ordered_suggestions(ordered_suggestions, n=5, string_if_no_options=None, string_if_options=None):
+def show_ordered_suggestions(ordered_suggestions, n=5, string_if_no_options=None, string_if_options=None) -> None:
     if string_if_no_options is None:
         string_if_no_options = "no suggestions found"
     if len(ordered_suggestions) == 0:
@@ -120,7 +123,7 @@ def get_lines_from_text_file(text_file: Path) -> List[Dict]:
     return lines
 
 
-def print_baseline(number, baseline_text, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None):
+def print_baseline(number, baseline_text, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None) -> None:
     highlight_word = word_index_to_highlight is not None
     highlight_morpheme = morpheme_index_to_highlight is not None
     if highlight_word and highlight_morpheme:

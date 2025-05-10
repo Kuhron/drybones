@@ -5,7 +5,10 @@
 import click
 from pathlib import Path
 
-from drybones.RowLabel import DEFAULT_ALIGNED_ROW_LABELS
+from drybones.Cell import Cell
+from drybones.Line import Line
+from drybones.Row import Row
+from drybones.RowLabel import RowLabel, DEFAULT_ALIGNED_ROW_LABELS
 
 
 @click.command
@@ -15,6 +18,8 @@ def enter(text_name):
     click.echo(f"Now entering data for text {text_name!r}. Press Ctrl+C to cancel current command, Ctrl+D to exit.")
     # TODO figure out how to get the Ctrl+C and Ctrl+D behavior to work with Click exceptions: https://click.palletsprojects.com/en/stable/exceptions/
 
+
+
     p = Path(f"texts/{text_name}.txt")
     p.parent.mkdir(exist_ok=True)
     if p.exists():
@@ -23,17 +28,39 @@ def enter(text_name):
 
     lines = []
 
-    with p.open(mode="w") as f:
+    while True:
+        line_number = len(lines) + 1
+        line_number_label = RowLabel("N")
+        line_number_cell = Cell([str(line_number)])
+        line_number_row = Row(line_number_label, cells=[line_number_cell])
+        
+        rows = [line_number_row]
+        click.echo(f"Ln:\t{text_name} {line_number}")
+        label_index = 0
         while True:
-            n = len(lines) + 1
-            line = {}  # TODO construct Line object
-            click.echo(f"Ln:\t{text_name} {n}")
-            for label in DEFAULT_ALIGNED_ROW_LABELS:
-                try:
-                    s = click.prompt(label, type=str, default="")
-                    lines.append(s)
-                    f.write(f"{label}:\t{s}\n")
-                except click.Abort:
-                    click.echo()
-                    continue
-    
+            label = DEFAULT_ALIGNED_ROW_LABELS[label_index]
+            try:
+                s = click.prompt(label, type=str, default="")
+                
+                # TODO integrate with logic from repl.py for command inputs
+                if s == ":q":
+                    return
+
+                cell = Cell(strs=[s])
+                row = Row(label, cells=[cell])  # let the cells just be whatever the user input for now, don't enforce parsing/length/etc. yet
+                rows.append(row)
+                print(f"got row: {row.to_str(with_label=True)}")
+                label_index += 1
+                if label_index >= len(DEFAULT_ALIGNED_ROW_LABELS):
+                    break
+            except click.Abort:
+                click.echo()
+                continue
+                # keep label_index the same so user can try again
+        line = Line(line_number, rows)
+        lines.append(line)
+        with p.open(mode="a") as f:
+            f.write(Line.BEFORE_LINE)
+            for row in line.rows:
+                f.write(row.to_str(with_label=True) + "\n")
+            f.write(Line.AFTER_LINE)

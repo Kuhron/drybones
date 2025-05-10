@@ -10,10 +10,14 @@ class Cell:
         self.strs = strs
 
     def to_str(self):
-        return "-".join(self.strs)
+        return Cell.DELIMITER.join(self.strs)
     
     def strip(self):
         return self.to_str().strip()
     
     def __repr__(self):
         return f"<Cell {self.strs}>"
+
+    def __str__(self):
+        return self.to_str()
+    
