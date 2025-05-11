@@ -8,7 +8,8 @@ from drybones.RowLabel import RowLabel
 
 
 class Row:
-    DELIMITER = " "
+    INTRA_ROW_DELIMITER = " "
+    
     def __init__(self, label: RowLabel, cells: List[Cell]):
         assert type(label) is RowLabel
         self.label = label
@@ -23,7 +24,7 @@ class Row:
         return iter(self.cells)
 
     def to_str(self, with_label: bool=True):
-        raw_s = Row.DELIMITER.join(cell.to_str() for cell in self.cells)
+        raw_s = Row.INTRA_ROW_DELIMITER.join(cell.to_str() for cell in self.cells)
         if with_label:
             return self.label.with_after_label_char() + " " + raw_s
         else:

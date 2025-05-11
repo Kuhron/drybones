@@ -1,13 +1,14 @@
 from typing import List
 
 from drybones.Row import Row
+from drybones.RowLabel import RowLabel
 from drybones.Validation import Validated, Invalidated, InvalidationError
 
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
 
 class Line:
-    BEFORE_LINE = "┌------------┐\n"
-    AFTER_LINE  = "└------------┘\n"
+    BEFORE_LINE = "┌------------┐"
+    AFTER_LINE  = "└------------┘"
 
     def __init__(self, number: int, rows: List[Row]):
         assert type(rows) is list
@@ -15,6 +16,13 @@ class Line:
         self.number = number
         self.rows = rows
         self.validate_row_lengths()
+        self.row_by_label = self.construct_row_by_label()
+
+    def construct_row_by_label(self):
+        d = {}
+        for r in self.rows:
+            d[r.label] = r
+        return d
 
     def validate_row_lengths(self):
         lens = sorted(set(len(x) for x in self.rows))
@@ -40,4 +48,9 @@ class Line:
     
     def __repr__(self):
         return repr(self.rows)
+    
+    def __getitem__(self, index):
+        if type(index) is not RowLabel:
+            raise TypeError(f"invalid type for subscripting Line: {type(index)}")
+        return self.row_by_label.get(index)
     

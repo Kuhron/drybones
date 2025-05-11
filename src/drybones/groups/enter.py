@@ -8,7 +8,7 @@ from pathlib import Path
 from drybones.Cell import Cell
 from drybones.Line import Line
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel, DEFAULT_ALIGNED_ROW_LABELS
+from drybones.RowLabel import RowLabel, DEFAULT_ALIGNED_ROW_LABELS, DEFAULT_LINE_NUMBER_LABEL
 
 
 @click.command
@@ -17,8 +17,6 @@ def enter(text_name):
     """Enter raw data for a text. This can also be done manually in the text files themselves."""
     click.echo(f"Now entering data for text {text_name!r}. Press Ctrl+C to cancel current command, Ctrl+D to exit.")
     # TODO figure out how to get the Ctrl+C and Ctrl+D behavior to work with Click exceptions: https://click.palletsprojects.com/en/stable/exceptions/
-
-
 
     p = Path(f"texts/{text_name}.txt")
     p.parent.mkdir(exist_ok=True)
@@ -30,10 +28,9 @@ def enter(text_name):
 
     while True:
         line_number = len(lines) + 1
-        line_number_label = RowLabel("N")
         line_number_cell = Cell([str(line_number)])
-        line_number_row = Row(line_number_label, cells=[line_number_cell])
-        
+        line_number_row = Row(DEFAULT_LINE_NUMBER_LABEL, cells=[line_number_cell])
+
         rows = [line_number_row]
         click.echo(f"Ln:\t{text_name} {line_number}")
         label_index = 0
@@ -49,7 +46,6 @@ def enter(text_name):
                 cell = Cell(strs=[s])
                 row = Row(label, cells=[cell])  # let the cells just be whatever the user input for now, don't enforce parsing/length/etc. yet
                 rows.append(row)
-                print(f"got row: {row.to_str(with_label=True)}")
                 label_index += 1
                 if label_index >= len(DEFAULT_ALIGNED_ROW_LABELS):
                     break

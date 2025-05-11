@@ -62,24 +62,24 @@ def get_print_strings_of_line_helper_using_column_index_groupings(column_index_g
         for row_i, these_cells in enumerate(cells):
             label = row_labels[row_i].with_colon()
             s = label + after_label_delim
-            # print(f"initial s   = {show_whitespace(s)}")
+            # click.echo(f"initial s   = {show_whitespace(s)}")
             if is_aligned_by_index[row_i]:
                 for i in column_index_grouping:
                     s += these_cells[i].ljust(max_seg_len_by_index[i] + sum(is_zero_width(c) for c in these_cells[i]))
-                    # print(f"plus cell   = {show_whitespace(s)}")
+                    # click.echo(f"plus cell   = {show_whitespace(s)}")
                     following_delim = "" if i == column_index_grouping[-1] else general_delim
                     s += following_delim
-                    # print(f"plus delim  = {show_whitespace(s)}")
+                    # click.echo(f"plus delim  = {show_whitespace(s)}")
             else:
                 assert sum(len(x) > 0 for x in these_cells) <= 2, f"non-aligned row shouldn't have any cells other than label and content, got {these_cells}"
                 s += after_label_delim.join(these_cells)
-                # print(f"non-aligned = {show_whitespace(s)}")
+                # click.echo(f"non-aligned = {show_whitespace(s)}")
             strs.append(s)
             # strs.append(get_counter_string(s))  # debug
         strs.append(group_delim)
     assert strs[-1] == group_delim
     strs = strs[:-1]
-    # print(strs)
+    # click.echo(strs)
     # input("a")
     return strs
 
@@ -88,11 +88,11 @@ def get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_in
     column_index_groupings = []  # which indices to group together since they don't exceed the terminal width
     # if a single field exceeds terminal width, just put it in a group by itself and let it overflow when printing
 
-    # print(f"{n_cells_per_row = }, {terminal_width = }")
-    # print(f"{max_seg_len_by_index = }")
+    # click.echo(f"{n_cells_per_row = }, {terminal_width = }")
+    # click.echo(f"{max_seg_len_by_index = }")
     # delim_length_after_column_index = dict([(i, (get_display_width(after_label_delim) if i == 0 else 0 if i == n_cells_per_row-1 else get_display_width(general_delim))) for i in range(n_cells_per_row)])
     # cumsum = dict_cumsum(max_seg_len_by_index, extra_addends=delim_length_after_column_index)
-    # print("cumsum:", cumsum)
+    # click.echo(f"cumsum: {cumsum}")
 
     str_start_width = max_label_len + after_label_delim_width  # every grouping starts with at least this
     current_sum_width = str_start_width
@@ -118,12 +118,12 @@ def get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_in
     if current_grouping != []:
         column_index_groupings.append(current_grouping)
 
-    print(f"created {column_index_groupings = }")
+    click.echo(f"created {column_index_groupings = }")
 
     # debug
     # for grouping in column_index_groupings:
         # group_cumsum = dict_cumsum(sub_dict(max_seg_len_by_index, grouping), extra_addends=delim_length_after_column_index)
-        # print("group cumsum:", group_cumsum)
+        # click.echo(f"group cumsum: {group_cumsum}")
     
     return column_index_groupings
 
