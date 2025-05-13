@@ -47,7 +47,7 @@ class Line:
         return len(self.rows)
     
     def __repr__(self):
-        return repr(self.rows)
+        return f"<Line {self.number} {self.rows!r}>"
     
     def __getitem__(self, index):
         if type(index) is not RowLabel:

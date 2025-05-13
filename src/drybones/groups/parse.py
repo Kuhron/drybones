@@ -14,19 +14,23 @@ colorama_init()
 from drybones.Cell import Cell
 from drybones.Line import Line
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel, DEFAULT_LINE_NUMBER_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL
+from drybones.RowLabel import RowLabel, DEFAULT_LINE_NUMBER_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL
 
 
 @click.command
-@click.argument("text_name")
-@click.argument("line_number", required=False, type=int)
+# @click.argument("text_name")
+# @click.argument("line_number", required=False, type=int)
 @click.pass_context
-def parse(ctx, text_name, line_number):
+def parse(ctx):
     """Parse text contents."""
     text_file = Path("/home/kuhron/drybones/playground/ProtoConticExampleSentences.txt")
 
     lines = get_lines_from_text_file(text_file)
     random.shuffle(lines)
+
+    # TODO load known parses and glosses from the corpus
+    known_parses_by_word = get_known_parses(lines)
+    known_glosses_by_morpheme = get_known_glosses(lines)
 
     # TODO config for if the orthography is case-sensitive
     # by default assume not case-sensitive, so set everything in baseline to lowercase
@@ -50,14 +54,14 @@ def parse(ctx, text_name, line_number):
                 raise ValueError("can't handle case-sensitive orthographies yet")
             else:
                 word = word.lower()
-            morphemes = get_morphemes_from_user(word)
+            morphemes = get_morphemes_from_user(word, known_parses_by_word)
             parse = MORPHEME_DELIMITER.join(morphemes)
             known_parses_by_word[word][parse] += 1
             glosses_this_word = []
             for j, morpheme in enumerate(morphemes):
                 print_baseline(number, baseline_str, words, i, morphemes, j)
                 click.echo(translation_str)
-                gloss = get_gloss_from_user(morpheme)
+                gloss = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
                 known_glosses_by_morpheme[morpheme][gloss] += 1
                 glosses_this_word.append(gloss)
             click.echo(f"received glosses: {MORPHEME_DELIMITER.join(glosses_this_word)}")
@@ -73,12 +77,6 @@ def parse(ctx, text_name, line_number):
     # :q = quit
 
 
-
-
-# TODO load known parses and glosses from the corpus
-known_parses_by_word = defaultdict(Counter)
-known_glosses_by_morpheme = defaultdict(Counter)
-
 UNKNOWN_GLOSS = "?"
 MORPHEME_DELIMITER = "-"
 WORD_DELIMITER = " "
@@ -92,10 +90,41 @@ GREEN_BACK = lambda s: Back.GREEN+Fore.BLACK + s + Style.RESET_ALL
 YELLOW_BACK = lambda s: Back.YELLOW+Fore.BLACK + s + Style.RESET_ALL
 
 
-def get_morphemes_from_user(word):
+def get_known_parses(lines):
+    known_parses_by_word = defaultdict(Counter)
+    baseline_label = DEFAULT_BASELINE_LABEL
+    parse_label = DEFAULT_PARSE_LABEL
+    for l in lines:
+        baseline_row = l[baseline_label]
+        parse_row = l[parse_label]
+        if parse_row is not None:
+            for bl_cell, parse_cell in zip(baseline_row, parse_row, strict=True):
+                bl_str = bl_cell.to_str()
+                parse_str = parse_cell.to_str()
+                known_parses_by_word[bl_str][parse_str] += 1
+    
+    return known_parses_by_word
+
+
+def get_known_glosses(lines):
+    known_glosses_by_morpheme = defaultdict(Counter)
+    parse_label = DEFAULT_PARSE_LABEL
+    gloss_label = DEFAULT_GLOSS_LABEL
+    for l in lines:
+        parse_row = l[parse_label]
+        gloss_row = l[gloss_label]
+        if gloss_row is not None:
+            for parse_cell, gloss_cell in zip(parse_row, gloss_row, strict=True):
+                for parse_str, gloss_str in zip(parse_cell.strs, gloss_cell.strs, strict=True):
+                    known_glosses_by_morpheme[parse_str][gloss_str] += 1
+    
+    return known_glosses_by_morpheme
+
+
+def get_morphemes_from_user(word, known_parses_by_word):
     click.echo(f"word: {word}")
     n_parses_to_show = 5
-    ordered_suggested_parses = get_ordered_suggested_parses(word, n=n_parses_to_show)
+    ordered_suggested_parses = get_ordered_suggested_parses(word, known_parses_by_word, n=n_parses_to_show)
     show_ordered_suggestions(ordered_suggested_parses, n=n_parses_to_show, 
                              string_if_no_options="no parses known for this word",
                              string_if_options="top parse candidates:",
@@ -109,7 +138,7 @@ def get_morphemes_from_user(word):
         parse_str = inp
     except IndexError:
         click.echo("oops, that number is out of range")
-        return get_morphemes_from_user(word)
+        return get_morphemes_from_user(word, known_parses_by_word)
     click.echo()
 
     if inp == "":
@@ -117,10 +146,10 @@ def get_morphemes_from_user(word):
     return parse_str.split(MORPHEME_DELIMITER)
 
 
-def get_gloss_from_user(morpheme):
+def get_gloss_from_user(morpheme, known_glosses_by_morpheme):
     click.echo(f"morpheme: {morpheme}")
-    ordered_suggested_glosses = get_ordered_suggested_glosses(morpheme)
     n_glosses_to_show = 5
+    ordered_suggested_glosses = get_ordered_suggested_glosses(morpheme, known_glosses_by_morpheme, n=n_glosses_to_show)
     show_ordered_suggestions(ordered_suggested_glosses, n=n_glosses_to_show,
                              string_if_no_options="no glosses known for this morpheme",
                              string_if_options="top gloss candidates:",
@@ -133,19 +162,19 @@ def get_gloss_from_user(morpheme):
         pass  # use whatever user gave for the gloss
     except IndexError:
         click.echo("oops, that number is out of range")
-        return get_gloss_from_user(morpheme)
+        return get_gloss_from_user(morpheme, known_glosses_by_morpheme)
     click.echo()
 
     if Cell.INTRA_CELL_DELIMITER in gloss:
         click.echo(f"the character {Cell.INTRA_CELL_DELIMITER!r} is not allowed in the gloss of an individual morpheme")
-        return get_gloss_from_user(morpheme)
+        return get_gloss_from_user(morpheme, known_glosses_by_morpheme)
 
     if gloss == "":
         gloss = UNKNOWN_GLOSS
     return gloss
 
 
-def get_ordered_suggested_parses(word: str, n: int=None) -> List[str]:
+def get_ordered_suggested_parses(word: str, known_parses_by_word, n: int=None) -> List[str]:
     possible_parses = known_parses_by_word[word]
     lst = [k for k,v in sorted(possible_parses.items(), key=lambda kv: kv[-1], reverse=True)]
     if n is not None:
@@ -154,7 +183,7 @@ def get_ordered_suggested_parses(word: str, n: int=None) -> List[str]:
         return lst
 
 
-def get_ordered_suggested_glosses(morpheme: str, n: int=None) -> List[str]:
+def get_ordered_suggested_glosses(morpheme: str, known_glosses_by_morpheme, n: int=None) -> List[str]:
     possible_glosses = known_glosses_by_morpheme[morpheme]
     lst = [k for k,v in sorted(possible_glosses.items(), key=lambda kv: kv[-1], reverse=True)]
     if n is not None:
@@ -183,6 +212,7 @@ def get_lines_from_text_file(text_file: Path) -> List[Line]:
         line_number = None
         row_strs = line_group.split("\n")
         rows = []
+        row_length = None
         for row_str in row_strs:
             if row_str == "":
                 continue
@@ -203,6 +233,11 @@ def get_lines_from_text_file(text_file: Path) -> List[Line]:
                 for cell_text in cell_texts:
                     cell = Cell(cell_text.split(Cell.INTRA_CELL_DELIMITER))
                     cells.append(cell)
+                this_row_length = len(cells)
+                if row_length is None:
+                    row_length = this_row_length
+                else:
+                    assert this_row_length == row_length, f"expected row of length {row_length} but got {this_row_length}"
             else:
                 cells = [Cell([row_text])]
             

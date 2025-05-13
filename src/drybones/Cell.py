@@ -8,8 +8,11 @@ class Cell:
 
     def __init__(self, strs):
         self.strs = strs
+        self.str = self.to_str()
 
     def to_str(self):
+        if hasattr(self, "str"):
+            return self.str
         return Cell.INTRA_CELL_DELIMITER.join(self.strs)
     
     def strip(self):

@@ -2,7 +2,7 @@
 N: 1
 Baseline: Tsema bahiri zermami.
 Parse: tse-ma bahi-ri ze-rma-mi
-Gloss: man-NOM apple-ACC eat-PROG-PRS
+Gloss: man-nom apple-acc eat-prog-prs
 Class: noun-afx noun-afx verb-afx-afx
 Wordgloss: man apple is.eating
 Wordclass: noun noun verb
@@ -15,7 +15,7 @@ extra text here that DryBones will ignore because it's not in a line block
 N: 2
 Baseline: Dama pteri rjinosimi.
 Parse: da-ma pte-ri rjino-si-mi
-Gloss: 1SG-NOM 2SG-ACC see-STAT-PRS
+Gloss: 1sg-nom 2sg-acc see-stat-prs
 Class: pron-afx pron-afx verb-afx-afx
 Wordgloss: I you see
 Wordclass: pron pron verb
@@ -145,7 +145,7 @@ Translation: I can not eat. (I am able not to eat; I can do something other than
 N: 27
 Baseline: Prisma srehima mani bahiri zedogi.
 Parse: prisma srehi-ma mani bahi-ri ze-do-gi
-Gloss: good girl-NOM big apple-ACC eat-MOM-PST
+Gloss: good girl-nom big apple-acc eat-mom-pst
 Class: adj noun-afx adj noun-afx verb-afx-afx
 Wordgloss: good girl big apple ate
 Wordclass: adj noun adj noun verb
@@ -315,7 +315,7 @@ Translation: I was speaking ever since you walked toward me.
 N: 60
 Baseline: Kameye dama sjeginurre jetepnegi.
 Parse: kame-ye da-ma sje-gi-nu-rre jete-pne-gi
-Gloss: volcano-TOPIC 1SG-NOM speak-PST-NMZR-ALLAT fire-INCH-PST
+Gloss: volcano-topic 1sg-nom speak-pst-nmzr-allat fire-inch-pst
 Class: noun-afx pron-afx verb-afx-afx-afx noun-afx-afx
 Wordgloss: volcano I until.spoke erupted
 Wordclass: noun pron adv verb
@@ -335,7 +335,7 @@ Translation: You are starting to walk toward me.
 N: 63
 Baseline: Krasuma ksiri zegire hekmeye prismacigi.
 Parse: krasu-ma ksi-ri ze-gi-re hekme-ye prisma-ci-gi
-Gloss: alligator-NOM REL.PRON-ACC eat-PST-RELZR meat-TOPIC good-be-PST
+Gloss: alligator-nom rel.pron-acc eat-pst-relzr meat-topic good-be-pst
 Class: noun-afx pron-afx verb-afx-afx noun-afx adj-afx>v-afx
 Wordgloss: alligator which which.ate meat was.good
 Wordclass: noun pron adj noun verb
