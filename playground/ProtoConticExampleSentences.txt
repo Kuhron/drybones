@@ -119,12 +119,14 @@ Translation: I like you.
 ┌------------┐
 N: 22
 Baseline: Dawa ptema zermami.
-Translation: Eat! 
+Translation: Eat!
 └------------┘
 ┌------------┐
 N: 23
 Baseline: Dapyu nema zermami.
 Translation: I can eat.
+Parse: da-pyu ne-ma ze-rma-mi
+Gloss: 1sg-abil refl-nom eat-prog-prs
 └------------┘
 ┌------------┐
 N: 24
@@ -195,6 +197,8 @@ Translation: You know that that person loves me.
 N: 36
 Baseline: Yama dama sjeginuri gurudogi.
 Translation: That person heard that I spoke.
+Parse: ya-ma da-ma sje-gi-nu-ri guru-do-gi
+Gloss: 3sg-nom 1sg-nom speak-pst-nmzr-acc hear-mom-pst
 └------------┘
 ┌------------┐
 N: 37
@@ -294,6 +298,8 @@ Translation: The alligator is smiling because it saw the meat.
 ┌------------┐
 N: 56
 Baseline: Ptema kamerre kojarmami.
+Parse: pte-ma kame-rre koja-rma-mi
+Gloss: 2sg-nom volcano-allat walk-prog-prs
 Translation: You are walking to the volcano.
 └------------┘
 ┌------------┐

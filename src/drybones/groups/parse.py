@@ -37,6 +37,8 @@ def parse(ctx):
     orthography_case_sensitive = False
 
     for line in lines:
+        if line.is_parsed_and_glossed():
+            continue
         number = line.number
         baseline_row = line[DEFAULT_BASELINE_LABEL]
         translation_row = line[DEFAULT_TRANSLATION_LABEL]
@@ -46,27 +48,43 @@ def parse(ctx):
         print_baseline(number, baseline_str)
         click.echo(translation_str + "\n")
 
+        new_rows = [row for row in line.rows]
+
         words = [cell.to_str() for cell in baseline_row.cells]
+        parse_cells = []
+        gloss_cells = []
         for i, word in enumerate(words):
             print_baseline(number, baseline_str, words, i)
             click.echo(translation_str)
             if orthography_case_sensitive:
                 raise ValueError("can't handle case-sensitive orthographies yet")
             else:
-                word = word.lower()
+                word = remove_punctuation(word.lower())
             morphemes = get_morphemes_from_user(word, known_parses_by_word)
-            parse = MORPHEME_DELIMITER.join(morphemes)
-            known_parses_by_word[word][parse] += 1
+            parse_str = MORPHEME_DELIMITER.join(morphemes)
+            known_parses_by_word[word][parse_str] += 1
             glosses_this_word = []
             for j, morpheme in enumerate(morphemes):
                 print_baseline(number, baseline_str, words, i, morphemes, j)
                 click.echo(translation_str)
-                gloss = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
-                known_glosses_by_morpheme[morpheme][gloss] += 1
-                glosses_this_word.append(gloss)
+                gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
+                known_glosses_by_morpheme[morpheme][gloss_str] += 1
+                glosses_this_word.append(gloss_str)
             click.echo(f"received glosses: {MORPHEME_DELIMITER.join(glosses_this_word)}")
             click.echo()
+
+            parse_cell = Cell(strs=morphemes)
+            parse_cells.append(parse_cell)
+            gloss_cell = Cell(strs=glosses_this_word)
+            gloss_cells.append(gloss_cell)
         click.echo()
+
+        parse_row = Row(DEFAULT_PARSE_LABEL, parse_cells)
+        gloss_row = Row(DEFAULT_GLOSS_LABEL, gloss_cells)
+        new_rows += [parse_row, gloss_row]
+
+        new_line = Line(number, new_rows)
+        click.echo(f"new_line:\n{new_line.to_string_for_text_file()}\n")
 
     # TODO print the edited line with rows in order, to some output file that could then [replace / be merged with] the input to update it
     # don't enforce the input being in a certain row order, but could just copy the orders we've seen in the input file
@@ -90,6 +108,13 @@ GREEN_BACK = lambda s: Back.GREEN+Fore.BLACK + s + Style.RESET_ALL
 YELLOW_BACK = lambda s: Back.YELLOW+Fore.BLACK + s + Style.RESET_ALL
 
 
+def remove_punctuation(word_str):
+    # for purposes of identifying if we have a parse of this word
+    if any(word_str.endswith(x) for x in [".", ",", "?", "!", ";"]):
+        return word_str[:-1]
+    return word_str
+
+
 def get_known_parses(lines):
     known_parses_by_word = defaultdict(Counter)
     baseline_label = DEFAULT_BASELINE_LABEL
@@ -99,7 +124,7 @@ def get_known_parses(lines):
         parse_row = l[parse_label]
         if parse_row is not None:
             for bl_cell, parse_cell in zip(baseline_row, parse_row, strict=True):
-                bl_str = bl_cell.to_str()
+                bl_str = remove_punctuation(bl_cell.to_str())
                 parse_str = parse_cell.to_str()
                 known_parses_by_word[bl_str][parse_str] += 1
     
@@ -272,7 +297,7 @@ def print_baseline(number, baseline_text, words=None, word_index_to_highlight=No
     if highlight_word and highlight_morpheme:
         before_words = words[:word_index_to_highlight]
         after_words = words[word_index_to_highlight+1:]
-        morpheme_strs = [RED(x) if i == morpheme_index_to_highlight else GREEN(x) for i,x in enumerate(morphemes)]
+        morpheme_strs = [YELLOW(x) if i == morpheme_index_to_highlight else GREEN(x) for i,x in enumerate(morphemes)]
         word_str = "".join(morpheme_strs)
         word_strs = before_words + [word_str] + after_words
         text = WORD_DELIMITER.join(word_strs)
@@ -280,7 +305,7 @@ def print_baseline(number, baseline_text, words=None, word_index_to_highlight=No
         before_words = words[:word_index_to_highlight]
         after_words = words[word_index_to_highlight+1:]
         word = words[word_index_to_highlight]
-        word_str = GREEN(word)
+        word_str = YELLOW(word)
         word_strs = before_words + [word_str] + after_words
         text = WORD_DELIMITER.join(word_strs)
     elif not highlight_word and highlight_morpheme:

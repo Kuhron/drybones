@@ -1,7 +1,7 @@
 from typing import List
 
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel
+from drybones.RowLabel import RowLabel, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL
 from drybones.Validation import Validated, Invalidated, InvalidationError
 
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
@@ -53,4 +53,15 @@ class Line:
         if type(index) is not RowLabel:
             raise TypeError(f"invalid type for subscripting Line: {type(index)}")
         return self.row_by_label.get(index)
+    
+    def is_parsed_and_glossed(self) -> bool:
+        return DEFAULT_PARSE_LABEL in self.row_by_label and DEFAULT_GLOSS_LABEL in self.row_by_label
+    
+    def to_string_for_text_file(self) -> str:
+        strs = [Line.BEFORE_LINE]
+        for row in self.rows:
+            s = row.to_str(with_label=True)
+            strs.append(s)
+        strs.append(Line.AFTER_LINE)
+        return "\n".join(strs)
     
