@@ -50,6 +50,8 @@ Translation: The man wants to see the woman.
 N: 8
 Baseline: Kyukbi tsema jiri rjinosimi.
 Translation: The woman wants the man to see her.
+Parse: kyu-kbi tse-ma ji-ri rjino-si-mi
+Gloss: woman-desid man-nom anaph-acc see-stat-prs
 └------------┘
 ┌------------┐
 N: 9
@@ -100,6 +102,8 @@ Translation: The man is an apple.
 N: 18
 Baseline: Tsema zedogi.
 Translation: The man ate.
+Parse: tse-ma ze-do-gi
+Gloss: man-nom eat-mom-pst
 └------------┘
 ┌------------┐
 N: 19
@@ -159,6 +163,8 @@ Translation: The good girl ate the big apple.
 N: 28
 Baseline: Dama ksiri rjinosimire monoma hekmeri zermami.
 Translation: The dog that I see is eating meat.
+Parse: da-ma ksi-ri rjino-si-mi-re mono-ma hekme-ri ze-rma-mi
+Gloss: 1sg-nom rel.pron-acc see-stat-prs-relzr dog-nom meat-acc eat-prog-prs
 └------------┘
 ┌------------┐
 N: 29
@@ -206,6 +212,8 @@ Gloss: 3sg-nom 1sg-nom speak-pst-nmzr-acc hear-mom-pst
 N: 37
 Baseline: Dama ksiri goragire sadiye sbibicimi.
 Translation: The sand that I touched is cold.
+Parse: da-ma ksi-ri gora-gi-re sadi-ye sbibi-ci-mi
+Gloss: 1sg-nom rel.pron-acc touch-pst-relzr sand-topic cold-be-prs
 └------------┘
 ┌------------┐
 N: 38
@@ -383,6 +391,8 @@ Translation: That person thinks it is bad that you fell into the volcano which e
 N: 70
 Baseline: Dasdi ptema yeknurre kojadogi.
 Translation: You and I walked to the house.
+Parse: da-sdi pte-ma yeknu-rre koja-do-gi
+Gloss: 1sg-and 2sg-nom house-allat walk-mom-pst
 └------------┘
 ┌------------┐
 N: 71

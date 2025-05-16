@@ -72,8 +72,6 @@ def parse(ctx):
                     gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
                     known_glosses_by_morpheme[morpheme][gloss_str] += 1
                     glosses_this_word.append(gloss_str)
-                click.echo(f"received glosses: {MORPHEME_DELIMITER.join(glosses_this_word)}")
-                click.echo()
 
                 parse_cell = Cell(strs=morphemes)
                 parse_cells.append(parse_cell)
