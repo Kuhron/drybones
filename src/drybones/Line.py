@@ -7,8 +7,8 @@ from drybones.Validation import Validated, Invalidated, InvalidationError
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
 
 class Line:
-    BEFORE_LINE = "┌------------┐"
-    AFTER_LINE  = "└------------┘"
+    BEFORE_LINE = "┌------------┐\n"
+    AFTER_LINE  = "\n└------------┘"
 
     def __init__(self, number: int, rows: List[Row]):
         assert type(rows) is list
@@ -58,10 +58,9 @@ class Line:
         return DEFAULT_PARSE_LABEL in self.row_by_label and DEFAULT_GLOSS_LABEL in self.row_by_label
     
     def to_string_for_text_file(self) -> str:
-        strs = [Line.BEFORE_LINE]
+        strs = []
         for row in self.rows:
             s = row.to_str(with_label=True)
             strs.append(s)
-        strs.append(Line.AFTER_LINE)
-        return "\n".join(strs)
+        return Line.BEFORE_LINE + "\n".join(strs) + Line.AFTER_LINE
     

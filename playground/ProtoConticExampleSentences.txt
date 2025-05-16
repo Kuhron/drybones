@@ -131,7 +131,9 @@ Gloss: 1sg-abil refl-nom eat-prog-prs
 ┌------------┐
 N: 24
 Baseline: Dama neri yeknurre thharmami.
-Translation: I am going to the house. 
+Translation: I am going to the house.
+Parse: da-ma ne-ri yeknu-rre thha-rma-mi
+Gloss: 1sg-nom refl-acc house-allat move-prog-prs
 └------------┘
 ┌------------┐
 N: 25

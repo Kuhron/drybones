@@ -23,12 +23,13 @@ from drybones.RowLabel import RowLabel, DEFAULT_LINE_NUMBER_LABEL, DEFAULT_ROW_L
 @click.pass_context
 def parse(ctx):
     """Parse text contents."""
-    text_file = Path("/home/kuhron/drybones/playground/ProtoConticExampleSentences.txt")
+    text_fp = Path("/home/kuhron/drybones/playground/ProtoConticExampleSentences.txt")
 
-    lines = get_lines_from_text_file(text_file)
+    lines, residues_by_location = get_lines_from_text_file(text_fp)
     random.shuffle(lines)
 
-    # TODO load known parses and glosses from the corpus
+    new_lines_by_number = {l.number: l for l in lines}
+
     known_parses_by_word = get_known_parses(lines)
     known_glosses_by_morpheme = get_known_glosses(lines)
 
@@ -36,59 +37,82 @@ def parse(ctx):
     # by default assume not case-sensitive, so set everything in baseline to lowercase
     orthography_case_sensitive = False
 
-    for line in lines:
-        if line.is_parsed_and_glossed():
-            continue
-        number = line.number
-        baseline_row = line[DEFAULT_BASELINE_LABEL]
-        translation_row = line[DEFAULT_TRANSLATION_LABEL]
-        baseline_str = baseline_row.to_str()
-        translation_str = translation_row.to_str()
+    try:
+        for line in lines:
+            if line.is_parsed_and_glossed():
+                continue
+            number = line.number
+            baseline_row = line[DEFAULT_BASELINE_LABEL]
+            translation_row = line[DEFAULT_TRANSLATION_LABEL]
+            baseline_str = baseline_row.to_str()
+            translation_str = translation_row.to_str()
 
-        print_baseline(number, baseline_str)
-        click.echo(translation_str + "\n")
+            print_baseline(number, baseline_str)
+            click.echo(translation_str + "\n")
 
-        new_rows = [row for row in line.rows]
+            new_rows = [row for row in line.rows]
 
-        words = [cell.to_str() for cell in baseline_row.cells]
-        parse_cells = []
-        gloss_cells = []
-        for i, word in enumerate(words):
-            print_baseline(number, baseline_str, words, i)
-            click.echo(translation_str)
-            if orthography_case_sensitive:
-                raise ValueError("can't handle case-sensitive orthographies yet")
-            else:
-                word = remove_punctuation(word.lower())
-            morphemes = get_morphemes_from_user(word, known_parses_by_word)
-            parse_str = MORPHEME_DELIMITER.join(morphemes)
-            known_parses_by_word[word][parse_str] += 1
-            glosses_this_word = []
-            for j, morpheme in enumerate(morphemes):
-                print_baseline(number, baseline_str, words, i, morphemes, j)
+            words = [cell.to_str() for cell in baseline_row.cells]
+            parse_cells = []
+            gloss_cells = []
+            for i, word in enumerate(words):
+                print_baseline(number, baseline_str, words, i)
                 click.echo(translation_str)
-                gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
-                known_glosses_by_morpheme[morpheme][gloss_str] += 1
-                glosses_this_word.append(gloss_str)
-            click.echo(f"received glosses: {MORPHEME_DELIMITER.join(glosses_this_word)}")
+                if orthography_case_sensitive:
+                    raise ValueError("can't handle case-sensitive orthographies yet")
+                else:
+                    word = remove_punctuation(word.lower())
+                morphemes = get_morphemes_from_user(word, known_parses_by_word)
+                parse_str = MORPHEME_DELIMITER.join(morphemes)
+                known_parses_by_word[word][parse_str] += 1
+                glosses_this_word = []
+                for j, morpheme in enumerate(morphemes):
+                    print_baseline(number, baseline_str, words, i, morphemes, j)
+                    click.echo(translation_str)
+                    gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
+                    known_glosses_by_morpheme[morpheme][gloss_str] += 1
+                    glosses_this_word.append(gloss_str)
+                click.echo(f"received glosses: {MORPHEME_DELIMITER.join(glosses_this_word)}")
+                click.echo()
+
+                parse_cell = Cell(strs=morphemes)
+                parse_cells.append(parse_cell)
+                gloss_cell = Cell(strs=glosses_this_word)
+                gloss_cells.append(gloss_cell)
             click.echo()
 
-            parse_cell = Cell(strs=morphemes)
-            parse_cells.append(parse_cell)
-            gloss_cell = Cell(strs=glosses_this_word)
-            gloss_cells.append(gloss_cell)
-        click.echo()
+            parse_row = Row(DEFAULT_PARSE_LABEL, parse_cells)
+            gloss_row = Row(DEFAULT_GLOSS_LABEL, gloss_cells)
+            new_rows += [parse_row, gloss_row]
 
-        parse_row = Row(DEFAULT_PARSE_LABEL, parse_cells)
-        gloss_row = Row(DEFAULT_GLOSS_LABEL, gloss_cells)
-        new_rows += [parse_row, gloss_row]
-
-        new_line = Line(number, new_rows)
-        click.echo(f"new_line:\n{new_line.to_string_for_text_file()}\n")
+            new_line = Line(number, new_rows)
+            click.echo(f"new_line:\n{new_line.to_string_for_text_file()}")
+            new_lines_by_number[new_line.number] = new_line
+    except KeyboardInterrupt:
+        click.echo("\nQuitting parsing")
+    finally:
+        # construct the output string to replace the input file's contents
+        # TODO put this in its own function
+        new_lines = [v for k,v in sorted(new_lines_by_number.items())]
+        s_to_write = ""
+        locations_checked = set()
+        for i, l in enumerate(new_lines):
+            location = i-0.5
+            locations_checked.add(location)
+            residue_before_line = residues_by_location.get(location, "")
+            line_str = l.to_string_for_text_file() 
+            s_to_write += residue_before_line + line_str
+        final_location = i+0.5  # actually using the final value of a loop variable outside the loop? crazy
+        locations_checked.add(final_location)
+        residue_at_end = residues_by_location.get(final_location, "")
+        s_to_write += residue_at_end
+        assert set(residues_by_location.keys()) - locations_checked == set(), "failed to check for residues at some locations"
+        with open(text_fp, "w") as f:
+            f.write(s_to_write)
 
     # TODO print the edited line with rows in order, to some output file that could then [replace / be merged with] the input to update it
     # don't enforce the input being in a certain row order, but could just copy the orders we've seen in the input file
-    
+
     # TODO commands to implement when reading user input (no matter what input we are expecting, if we get a command then go do that instead)
     # :b = go back
     # :{number} = go re-parse line of this number
@@ -229,8 +253,8 @@ def show_ordered_suggestions(ordered_suggestions, n=5, string_if_no_options=None
             click.echo(f"{i+1}. {ordered_suggestions[i]}")
 
 
-def get_lines_from_text_file(text_file: Path) -> List[Line]:
-    line_groups = get_line_group_strings_from_text_file(text_file)
+def get_lines_from_text_file(text_file: Path):
+    line_groups, residues_by_location = get_line_group_strings_from_text_file(text_file)
     lines = []
     row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
     for line_group in line_groups:
@@ -270,25 +294,31 @@ def get_lines_from_text_file(text_file: Path) -> List[Line]:
             rows.append(row)
         line = Line(line_number, rows)
         lines.append(line)
-    return lines
+    return lines, residues_by_location
 
 
-def get_line_group_strings_from_text_file(text_file: Path) -> List[str]:
+def get_line_group_strings_from_text_file(text_file: Path):
     with open(text_file) as f:
         contents = f.read()
     l = contents.split(Line.BEFORE_LINE)
     groups = []
-    for s in l:
-        group, *residues = s.split(Line.AFTER_LINE)
-        group = group.strip()
+    residue_before_first_group = l[0]
+    residues_by_location = {-0.5: residue_before_first_group}  # location is +/- 0.5 from group index (regardless of the group's labeled number)
+    for s in l[1:]:
+        group, *residues = s.split(Line.AFTER_LINE)  # there may be stray AFTER_LINE delimiters in the residue
+        groups.append(group)
         if len(residues) > 0:
-            residue = Line.AFTER_LINE.join(residues).strip()
-            # throw the residue away
-            if len(residue) > 0:
+            residue = Line.AFTER_LINE.join(residues)
+            if len(residue.strip()) > 0:
                 click.echo(f"ignoring text outside of line block:\n{residue!r}\n")
-        if len(group) > 0:
-            groups.append(group)
-    return groups
+            last_group_index = len(groups) - 1
+            location = last_group_index + 0.5
+            assert location not in residues_by_location
+            residues_by_location[location] = residue
+    # TODO make a LineGroupString object and ResidueString object for holding the original file contents after breaking it apart
+    # then can call a function on a LineGroupString to parse it into a Line
+    # but want the top-level parse command call to be able to just grab the original string for a group that was unedited, and for a residue, without me stripping off whitespace and then adding it back on (error prone)
+    return groups, residues_by_location
 
 
 def print_baseline(number, baseline_text, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None) -> None:
