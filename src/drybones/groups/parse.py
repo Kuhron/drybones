@@ -18,13 +18,11 @@ from drybones.RowLabel import RowLabel, DEFAULT_LINE_NUMBER_LABEL, DEFAULT_ROW_L
 
 
 @click.command
-# @click.argument("text_name")
-# @click.argument("line_number", required=False, type=int)
+@click.argument("text_fp", required=True, type=Path)
+@click.argument("line_number", required=False, type=int)
 @click.pass_context
-def parse(ctx):
+def parse(ctx, text_fp: Path, line_number: int=None):
     """Parse text contents."""
-    text_fp = Path("/home/kuhron/drybones/playground/ProtoConticExampleSentences.txt")
-
     lines, residues_by_location = get_lines_from_text_file(text_fp)
     random.shuffle(lines)
 
@@ -84,7 +82,7 @@ def parse(ctx):
             new_rows += [parse_row, gloss_row]
 
             new_line = Line(number, new_rows)
-            click.echo(f"new_line:\n{new_line.to_string_for_text_file()}")
+            click.echo(f"new_line:\n{new_line.to_string_for_text_file()}\n")
             new_lines_by_number[new_line.number] = new_line
     except KeyboardInterrupt:
         click.echo("\nQuitting parsing")

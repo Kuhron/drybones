@@ -30,6 +30,8 @@ Translation: The man saw.
 N: 4
 Baseline: Tseri rjinosiksa.
 Translation: The man will be seen.
+Parse: tse-ri rjino-si-ksa
+Gloss: man-acc see-stat-fut
 └------------┘
 ┌------------┐
 N: 5
@@ -143,6 +145,8 @@ Gloss: 1sg-nom refl-acc house-allat move-prog-prs
 N: 25
 Baseline: Seye dapyu nema zermami.
 Translation: I can't eat. (I am not the one who can eat.)
+Parse: seye da-pyu ne-ma ze-rma-mi
+Gloss: neg 1sg-abil refl-nom eat-prog-prs
 └------------┘
 ┌------------┐
 N: 26
@@ -170,6 +174,8 @@ Gloss: 1sg-nom rel.pron-acc see-stat-prs-relzr dog-nom meat-acc eat-prog-prs
 N: 29
 Baseline: Yama dama zeginuri rbasimi.
 Translation: That person knows that I ate.
+Parse: ya-ma da-ma ze-gi-nu-ri rba-si-mi
+Gloss: 3sg-nom 1sg-nom eat-pst-nmzr-acc know-stat-prs
 └------------┘
 ┌------------┐
 N: 30
@@ -304,6 +310,8 @@ Translation: I have been smiling ever since I ate the meat.
 N: 55
 Baseline: Krasuma nema hekmeri rjinoginutgo prirmami.
 Translation: The alligator is smiling because it saw the meat.
+Parse: krasu-ma ne-ma hekme-ri rjino-gi-nu-tgo pri-rma-mi
+Gloss: alligator-nom refl-nom meat-acc see-pst-nmzr-caus smile-prog-prs
 └------------┘
 ┌------------┐
 N: 56
@@ -326,6 +334,8 @@ Translation: I spoke until you walked away.
 N: 59
 Baseline: Dama ptema darre kojaginuraza sjermagi.
 Translation: I was speaking ever since you walked toward me.
+Parse: da-ma pte-ma da-rre koja-gi-nu-raza sje-rma-gi
+Gloss: 1sg-nom 2sg-nom 1sg-allat walk-pst-nmzr-abl speak-prog-pst
 └------------┘
 ┌------------┐
 N: 60
@@ -403,6 +413,8 @@ Translation: You and your house are good.
 N: 72
 Baseline: Dama ptema kojaginusdi ktaginuri rbasimi.
 Translation: I know that you walked and fell.
+Parse: da-ma pte-ma koja-gi-nu-sdi kta-gi-nu-ri rba-si-mi
+Gloss: 1sg-nom 2sg-nom walk-pst-nmzr-and fall-pst-nmzr-acc know-stat-prs
 └------------┘
 ┌------------┐
 N: 73
