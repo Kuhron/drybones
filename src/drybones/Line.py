@@ -10,10 +10,10 @@ class Line:
     BEFORE_LINE = "┌------------┐\n"
     AFTER_LINE  = "\n└------------┘"
 
-    def __init__(self, number: int, rows: List[Row]):
+    def __init__(self, designation: str, rows: List[Row]):
         assert type(rows) is list
         assert all(type(x) is Row for x in rows)
-        self.number = number
+        self.designation = designation
         self.rows = rows
         self.validate_row_lengths()
         self.row_by_label = self.construct_row_by_label()
@@ -47,7 +47,7 @@ class Line:
         return len(self.rows)
     
     def __repr__(self):
-        return f"<Line {self.number} {self.rows!r}>"
+        return f"<Line {self.designation} {self.rows!r}>"
     
     def __getitem__(self, index):
         if type(index) is not RowLabel:
@@ -63,4 +63,3 @@ class Line:
             s = row.to_str(with_label=True)
             strs.append(s)
         return Line.BEFORE_LINE + "\n".join(strs) + Line.AFTER_LINE
-    

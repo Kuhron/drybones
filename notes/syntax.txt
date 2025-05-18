@@ -1,0 +1,21 @@
+This is a description of syntax used within DryBones text files
+(i.e., NOT within raw data txt that will later be converted to DryBones, which has its own format, documented in
+- {Hurukui repo}/RawDataEntry/RawDataToDryBonesConversionNotes.txt
+and
+- {Hurukui repo}/RawDataEntry/ConvertRawDataToDryBones.py
+).
+
+- Lines mentioning the production and judgment of the "frame utterance" are ones in which multiple options
+    were tried for part of the utterance, e.g. "P ima kepu {B^ wora / P* w[e']pakhai}".
+    Here the frame utterance is the part outside the curly brackets. The production and acceptability of it
+    may differ from that of the resulting utterance once a given option is plugged in.
+    In DryBones text, the options are not shown, as they are split onto separate lines so that each line
+    shows an utterance in the language. This makes it easier to computationally query things like how acceptable
+    it is to place certain words/morphemes together, without having to parse the optionality section.
+    The frame utterance is thus not explicitly shown, but it can be inferred by comparing the lines with each
+    option. These lines' designations will be the same except for a final letter appended to the line number,
+    e.g. 4.111.24a and 4.111.24b.
+- Things within the baseline (and other parseable rows) that will be ignored in-line are surrounded by angle
+    brackets (<>). Use this sparingly, such as for labeling two sentences within the line as being uttered
+    by different speakers in an exchange (for showing call-and-response types of examples). For most other
+    kinds of notes, use a "Note" row.

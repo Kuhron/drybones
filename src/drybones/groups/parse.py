@@ -17,6 +17,10 @@ from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_NUMBER_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL
 
 
+# TODO get it to ignore inline comments like <S1:> for parsing/glossing, but keep them around in the strings (and also put them in the corresponding place in the parse/gloss)
+# TODO get underscores working for the aligned lines, like how "musu maisa" has a space in the baseline but is treated as one unit for parse/gloss, parsed as "musu_maisa"
+
+
 @click.command
 @click.argument("text_fp", required=True, type=Path)
 @click.argument("line_number", required=False, type=int)
@@ -83,7 +87,7 @@ def parse(ctx, text_fp: Path, line_number: int=None):
 
             new_line = Line(number, new_rows)
             click.echo(f"new_line:\n{new_line.to_string_for_text_file()}\n")
-            new_lines_by_number[new_line.number] = new_line
+            new_lines_by_number[new_line.designation] = new_line
     except KeyboardInterrupt:
         click.echo("\nQuitting parsing")
     finally:
@@ -261,7 +265,13 @@ def get_lines_from_text_file(text_file: Path):
         for row_str in row_strs:
             if row_str == "":
                 continue
-            label_str, row_text = row_str.split(RowLabel.AFTER_LABEL_CHAR)
+            label_str, *row_text_pieces = row_str.split(RowLabel.AFTER_LABEL_CHAR)
+            if len(row_text_pieces) == 0:
+                click.echo(f"row has no label:\n{row_str!r}\n")
+                raise click.Abort()
+            else:
+                row_text = RowLabel.AFTER_LABEL_CHAR.join(row_text_pieces)
+            
             row_text = row_text.strip()
             try:
                 label = row_labels_by_string[label_str]
@@ -270,7 +280,7 @@ def get_lines_from_text_file(text_file: Path):
                 row_labels_by_string[label_str] = label
 
             if label == DEFAULT_LINE_NUMBER_LABEL:
-                line_number = int(row_text)
+                line_number = row_text
 
             if label.is_aligned():
                 cell_texts = row_text.split(Row.INTRA_ROW_DELIMITER)
@@ -282,7 +292,7 @@ def get_lines_from_text_file(text_file: Path):
                 if row_length is None:
                     row_length = this_row_length
                 else:
-                    assert this_row_length == row_length, f"expected row of length {row_length} but got {this_row_length}"
+                    assert this_row_length == row_length, f"expected row of length {row_length} but got {this_row_length}:\n{row_text}"
             else:
                 cells = [Cell([row_text])]
             
