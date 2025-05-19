@@ -18,10 +18,12 @@ from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_
 
 
 # TODO get it to ignore inline comments like <S1:> for parsing/glossing, but keep them around in the strings (and also put them in the corresponding place in the parse/gloss)
+# TODO figure out if/how I want to implement morphemes as sets of allomorphs, e.g. connecting "sah" to "sa/saV" (the initial of the LVC "sah-i- / sa-hi-" depending on analysis)
+
 
 @click.command
 @click.argument("text_fp", required=True, type=Path)
-@click.argument("line_designation", required=False, type=int)
+@click.argument("line_designation", required=False, type=str)
 @click.option("--shuffle", "-s", type=bool, default=False, help="Shuffle the lines during parsing.")
 @click.option("--overwrite", "-o", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
@@ -34,80 +36,34 @@ def parse(ctx, text_fp: Path, line_designation, shuffle, overwrite):
 
     lines, residues_by_location = get_lines_from_text_file(text_fp)
     line_designations_in_order = [l.designation for l in lines]
-    if shuffle:
-        random.shuffle(lines)
 
     new_lines_by_designation = {l.designation: l for l in lines}
+
+    if line_designation is not None:
+        lines_to_parse = [new_lines_by_designation[line_designation]]
+    else:
+        lines_to_parse = lines
+        if shuffle:
+            random.shuffle(lines_to_parse)
 
     known_parses_by_word = get_known_parses(lines)
     known_glosses_by_morpheme = get_known_glosses(lines)
 
-    # TODO config for if the orthography is case-sensitive
-    # by default assume not case-sensitive, so set everything in baseline to lowercase
-    orthography_case_sensitive = False
+    orthography_case_sensitive = False  # does anyone in their right mind do this? only Klingon, I think
+    # but I could see it being used for things like restricting the text to ASCII / avoiding diacritics
+    #     for the purposes of typing things up easily
 
     try:
-        for line in lines:
+        for line in lines_to_parse:
             if line.is_parsed_and_glossed():
+                if line_designation is not None:
+                    # user asked for a specific line, tell them what happened
+                    click.echo(f"line {line_designation} is already parsed and glossed")
                 continue
-            designation = line.designation
-
             baseline_row = line[DEFAULT_BASELINE_LABEL]
             if baseline_row is None:
                 continue
-
-            translation_row = line[DEFAULT_TRANSLATION_LABEL]
-            if translation_row is None:
-                click.echo(f"No translation found in line:\n{line}")
-                raise click.Abort()
-            
-            baseline_str = baseline_row.to_str()
-            translation_str = translation_row.to_str()
-
-            production_row = line[DEFAULT_PRODUCTION_LABEL]
-            production_str = production_row.to_str(with_label=False) if production_row is not None else ""
-            judgment_row = line[DEFAULT_JUDGMENT_LABEL]
-            judgment_str = judgment_row.to_str(with_label=False) if judgment_row is not None else ""
-
-            print_baseline(designation, baseline_str, production_str, judgment_str)
-            click.echo(translation_str + "\n")
-
-            new_rows = [row for row in line.rows]
-
-            words = [cell.to_str() for cell in baseline_row.cells]
-            parse_cells = []
-            gloss_cells = []
-            for i, word in enumerate(words):
-                print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i)
-                click.echo(translation_str)
-                if orthography_case_sensitive:
-                    raise ValueError("can't handle case-sensitive orthographies yet")
-                else:
-                    word = remove_punctuation(word.lower())
-                morphemes = get_morphemes_from_user(word, known_parses_by_word)
-                parse_str = MORPHEME_DELIMITER.join(morphemes)
-                known_parses_by_word[word][parse_str] += 1
-                glosses_this_word = []
-                for j, morpheme in enumerate(morphemes):
-                    print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i, morphemes=morphemes, morpheme_index_to_highlight=j)
-                    click.echo(translation_str)
-                    gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
-                    known_glosses_by_morpheme[morpheme][gloss_str] += 1
-                    glosses_this_word.append(gloss_str)
-
-                parse_cell = Cell(strs=morphemes)
-                parse_cells.append(parse_cell)
-                gloss_cell = Cell(strs=glosses_this_word)
-                gloss_cells.append(gloss_cell)
-            click.echo()
-
-            parse_row = Row(DEFAULT_PARSE_LABEL, parse_cells)
-            gloss_row = Row(DEFAULT_GLOSS_LABEL, gloss_cells)
-            new_rows += [parse_row, gloss_row]
-
-            new_line = Line(designation, new_rows)
-            click.echo(f"new_line:\n{new_line.to_string_for_text_file()}\n")
-            new_lines_by_designation[new_line.designation] = new_line
+            known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation)
     except KeyboardInterrupt:
         click.echo("\nQuitting parsing")
     finally:
@@ -153,11 +109,71 @@ GREEN_BACK = lambda s: Back.GREEN+Fore.BLACK + s + Style.RESET_ALL
 YELLOW_BACK = lambda s: Back.YELLOW+Fore.BLACK + s + Style.RESET_ALL
 
 
+def parse_single_line(line: Line, known_parses_by_word: dict, known_glosses_by_morpheme: dict, new_lines_by_designation: dict):
+    designation = line.designation
+
+    baseline_row = line[DEFAULT_BASELINE_LABEL]
+    translation_row = line[DEFAULT_TRANSLATION_LABEL]
+    if translation_row is None:
+        click.echo(f"No translation found in line:\n{line}")
+        raise click.Abort()
+    
+    baseline_str = baseline_row.to_str(with_label=False)
+    translation_str = translation_row.to_str()
+
+    production_row = line[DEFAULT_PRODUCTION_LABEL]
+    production_str = production_row.to_str(with_label=False) if production_row is not None else ""
+    judgment_row = line[DEFAULT_JUDGMENT_LABEL]
+    judgment_str = judgment_row.to_str(with_label=False) if judgment_row is not None else ""
+
+    print_baseline(designation, baseline_str, production_str, judgment_str)
+    click.echo(translation_str + "\n")
+
+    new_rows = [row for row in line.rows]
+
+    words = [cell.to_str() for cell in baseline_row.cells]
+    parse_cells = []
+    gloss_cells = []
+    for i, word in enumerate(words):
+        print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i)
+        click.echo(translation_str)
+        word = remove_punctuation(word.lower())
+        morphemes = get_morphemes_from_user(word, known_parses_by_word)
+        parse_str = MORPHEME_DELIMITER.join(morphemes)
+        known_parses_by_word[word][parse_str] += 1
+        glosses_this_word = []
+        for j, morpheme in enumerate(morphemes):
+            print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i, morphemes=morphemes, morpheme_index_to_highlight=j)
+            click.echo(translation_str)
+            gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
+            known_glosses_by_morpheme[morpheme][gloss_str] += 1
+            glosses_this_word.append(gloss_str)
+
+        parse_cell = Cell(strs=morphemes)
+        parse_cells.append(parse_cell)
+        gloss_cell = Cell(strs=glosses_this_word)
+        gloss_cells.append(gloss_cell)
+    click.echo()
+
+    parse_row = Row(DEFAULT_PARSE_LABEL, parse_cells)
+    gloss_row = Row(DEFAULT_GLOSS_LABEL, gloss_cells)
+    new_rows += [parse_row, gloss_row]
+
+    new_line = Line(designation, new_rows)
+    click.echo(f"new_line:\n{new_line.to_string_for_text_file()}\n")
+    new_lines_by_designation[new_line.designation] = new_line
+    
+    return known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation
+
+
 def remove_punctuation(word_str):
     # for purposes of identifying if we have a parse of this word
-    if any(word_str.endswith(x) for x in [".", ",", "?", "!", ";"]):
-        return word_str[:-1]
-    return word_str
+    res = word_str
+    if any(res.endswith(x) for x in [".", ",", "?", "!", ";"]):
+        res = res[:-1]
+    if res[0] == "(" and res[-1] == ")":
+        res = res[1:-1]
+    return res
 
 
 def get_known_parses(lines):
