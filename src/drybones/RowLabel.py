@@ -41,6 +41,8 @@ DEFAULT_GLOSS_LABEL = RowLabel("Gloss", aligned=True)
 DEFAULT_MORPHEME_CLASS_LABEL = RowLabel("Class", aligned=True)
 DEFAULT_WORD_GLOSS_LABEL = RowLabel("Wordgloss", aligned=True)
 DEFAULT_WORD_CLASS_LABEL = RowLabel("Wordclass", aligned=True)
+DEFAULT_PRODUCTION_LABEL = RowLabel("Production", aligned=False)
+DEFAULT_JUDGMENT_LABEL = RowLabel("Judgment", aligned=False)
 
 DEFAULT_ROW_LABELS = [
     DEFAULT_LINE_DESIGNATION_LABEL,

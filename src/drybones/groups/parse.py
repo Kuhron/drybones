@@ -14,25 +14,28 @@ colorama_init()
 from drybones.Cell import Cell
 from drybones.Line import Line
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL
+from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_PRODUCTION_LABEL, DEFAULT_JUDGMENT_LABEL
 
 
 # TODO get it to ignore inline comments like <S1:> for parsing/glossing, but keep them around in the strings (and also put them in the corresponding place in the parse/gloss)
-# TODO get underscores working for the aligned lines, like how "musu maisa" has a space in the baseline but is treated as one unit for parse/gloss, parsed as "musu_maisa"
-
 
 @click.command
 @click.argument("text_fp", required=True, type=Path)
 @click.argument("line_designation", required=False, type=int)
-@click.option("--shuffle", "-s", type=bool, default=False, help="shuffle the lines during parsing")
+@click.option("--shuffle", "-s", type=bool, default=False, help="Shuffle the lines during parsing.")
+@click.option("--overwrite", "-o", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
-def parse(ctx, text_fp: Path, line_designation, shuffle):
+def parse(ctx, text_fp: Path, line_designation, shuffle, overwrite):
     """Parse text contents."""
-    new_text_fp = text_fp.parent / (text_fp.stem + "_dryout.txt")
+    if overwrite:
+        new_text_fp = text_fp
+    else:
+        new_text_fp = text_fp.parent / (text_fp.stem + "_dryout.txt")
 
     lines, residues_by_location = get_lines_from_text_file(text_fp)
     line_designations_in_order = [l.designation for l in lines]
-    random.shuffle(lines)
+    if shuffle:
+        random.shuffle(lines)
 
     new_lines_by_designation = {l.designation: l for l in lines}
 
@@ -61,7 +64,12 @@ def parse(ctx, text_fp: Path, line_designation, shuffle):
             baseline_str = baseline_row.to_str()
             translation_str = translation_row.to_str()
 
-            print_baseline(designation, baseline_str)
+            production_row = line[DEFAULT_PRODUCTION_LABEL]
+            production_str = production_row.to_str(with_label=False) if production_row is not None else ""
+            judgment_row = line[DEFAULT_JUDGMENT_LABEL]
+            judgment_str = judgment_row.to_str(with_label=False) if judgment_row is not None else ""
+
+            print_baseline(designation, baseline_str, production_str, judgment_str)
             click.echo(translation_str + "\n")
 
             new_rows = [row for row in line.rows]
@@ -70,7 +78,7 @@ def parse(ctx, text_fp: Path, line_designation, shuffle):
             parse_cells = []
             gloss_cells = []
             for i, word in enumerate(words):
-                print_baseline(designation, baseline_str, words, i)
+                print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i)
                 click.echo(translation_str)
                 if orthography_case_sensitive:
                     raise ValueError("can't handle case-sensitive orthographies yet")
@@ -81,7 +89,7 @@ def parse(ctx, text_fp: Path, line_designation, shuffle):
                 known_parses_by_word[word][parse_str] += 1
                 glosses_this_word = []
                 for j, morpheme in enumerate(morphemes):
-                    print_baseline(designation, baseline_str, words, i, morphemes, j)
+                    print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i, morphemes=morphemes, morpheme_index_to_highlight=j)
                     click.echo(translation_str)
                     gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
                     known_glosses_by_morpheme[morpheme][gloss_str] += 1
@@ -133,8 +141,8 @@ def parse(ctx, text_fp: Path, line_designation, shuffle):
 
 
 UNKNOWN_GLOSS = "?"
-MORPHEME_DELIMITER = "-"
-WORD_DELIMITER = " "
+MORPHEME_DELIMITER = Cell.INTRA_CELL_DELIMITER
+WORD_DELIMITER = Row.INTRA_ROW_DELIMITER
 COMMAND_CHAR = ":"
 
 RED = lambda s: Fore.RED + s + Style.RESET_ALL
@@ -340,14 +348,14 @@ def get_line_group_strings_from_text_file(text_file: Path):
     return groups, residues_by_location
 
 
-def print_baseline(designation, baseline_text, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None) -> None:
+def print_baseline(designation, baseline_text, production_str, judgment_str, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None) -> None:
     highlight_word = word_index_to_highlight is not None
     highlight_morpheme = morpheme_index_to_highlight is not None
     if highlight_word and highlight_morpheme:
         before_words = words[:word_index_to_highlight]
         after_words = words[word_index_to_highlight+1:]
         morpheme_strs = [YELLOW(x) if i == morpheme_index_to_highlight else GREEN(x) for i,x in enumerate(morphemes)]
-        word_str = "".join(morpheme_strs)
+        word_str = Cell.INTRA_CELL_DELIMITER.join(morpheme_strs)
         word_strs = before_words + [word_str] + after_words
         text = WORD_DELIMITER.join(word_strs)
     elif highlight_word and not highlight_morpheme:
@@ -362,7 +370,8 @@ def print_baseline(designation, baseline_text, words=None, word_index_to_highlig
     else:
         text = baseline_text
     
-    click.echo(f"{designation}. {text}")
+    pj_str = "" if production_str == "" and judgment_str == "" else production_str + judgment_str + " "
+    click.echo(f"{designation}. {pj_str}{text}")
 
 
 def is_command(s: str) -> bool:
