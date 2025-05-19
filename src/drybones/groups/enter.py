@@ -8,7 +8,7 @@ from pathlib import Path
 from drybones.Cell import Cell
 from drybones.Line import Line
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel, DEFAULT_ALIGNED_ROW_LABELS, DEFAULT_LINE_NUMBER_LABEL
+from drybones.RowLabel import RowLabel, DEFAULT_ALIGNED_ROW_LABELS, DEFAULT_LINE_DESIGNATION_LABEL
 
 
 @click.command
@@ -29,7 +29,7 @@ def enter(text_name):
     while True:
         line_number = len(lines) + 1
         line_number_cell = Cell([str(line_number)])
-        line_number_row = Row(DEFAULT_LINE_NUMBER_LABEL, cells=[line_number_cell])
+        line_number_row = Row(DEFAULT_LINE_DESIGNATION_LABEL, cells=[line_number_cell])
 
         rows = [line_number_row]
         click.echo(f"Ln:\t{text_name} {line_number}")

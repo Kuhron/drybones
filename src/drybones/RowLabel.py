@@ -33,7 +33,7 @@ class RowLabel:
         return hash(repr(self))
 
 
-DEFAULT_LINE_NUMBER_LABEL = RowLabel("N", aligned=False)
+DEFAULT_LINE_DESIGNATION_LABEL = RowLabel("N", aligned=False)
 DEFAULT_BASELINE_LABEL = RowLabel("Baseline", aligned=True)
 DEFAULT_TRANSLATION_LABEL = RowLabel("Translation", aligned=False)
 DEFAULT_PARSE_LABEL = RowLabel("Parse", aligned=True)
@@ -43,7 +43,7 @@ DEFAULT_WORD_GLOSS_LABEL = RowLabel("Wordgloss", aligned=True)
 DEFAULT_WORD_CLASS_LABEL = RowLabel("Wordclass", aligned=True)
 
 DEFAULT_ROW_LABELS = [
-    DEFAULT_LINE_NUMBER_LABEL,
+    DEFAULT_LINE_DESIGNATION_LABEL,
     DEFAULT_BASELINE_LABEL,
     DEFAULT_TRANSLATION_LABEL,
     DEFAULT_PARSE_LABEL,

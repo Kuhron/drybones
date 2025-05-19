@@ -14,7 +14,7 @@ colorama_init()
 from drybones.Cell import Cell
 from drybones.Line import Line
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel, DEFAULT_LINE_NUMBER_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL
+from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL
 
 
 # TODO get it to ignore inline comments like <S1:> for parsing/glossing, but keep them around in the strings (and also put them in the corresponding place in the parse/gloss)
@@ -23,14 +23,18 @@ from drybones.RowLabel import RowLabel, DEFAULT_LINE_NUMBER_LABEL, DEFAULT_ROW_L
 
 @click.command
 @click.argument("text_fp", required=True, type=Path)
-@click.argument("line_number", required=False, type=int)
+@click.argument("line_designation", required=False, type=int)
+@click.option("--shuffle", "-s", type=bool, default=False, help="shuffle the lines during parsing")
 @click.pass_context
-def parse(ctx, text_fp: Path, line_number: int=None):
+def parse(ctx, text_fp: Path, line_designation, shuffle):
     """Parse text contents."""
+    new_text_fp = text_fp.parent / (text_fp.stem + "_dryout.txt")
+
     lines, residues_by_location = get_lines_from_text_file(text_fp)
+    line_designations_in_order = [l.designation for l in lines]
     random.shuffle(lines)
 
-    new_lines_by_number = {l.number: l for l in lines}
+    new_lines_by_designation = {l.designation: l for l in lines}
 
     known_parses_by_word = get_known_parses(lines)
     known_glosses_by_morpheme = get_known_glosses(lines)
@@ -43,13 +47,21 @@ def parse(ctx, text_fp: Path, line_number: int=None):
         for line in lines:
             if line.is_parsed_and_glossed():
                 continue
-            number = line.number
+            designation = line.designation
+
             baseline_row = line[DEFAULT_BASELINE_LABEL]
+            if baseline_row is None:
+                continue
+
             translation_row = line[DEFAULT_TRANSLATION_LABEL]
+            if translation_row is None:
+                click.echo(f"No translation found in line:\n{line}")
+                raise click.Abort()
+            
             baseline_str = baseline_row.to_str()
             translation_str = translation_row.to_str()
 
-            print_baseline(number, baseline_str)
+            print_baseline(designation, baseline_str)
             click.echo(translation_str + "\n")
 
             new_rows = [row for row in line.rows]
@@ -58,7 +70,7 @@ def parse(ctx, text_fp: Path, line_number: int=None):
             parse_cells = []
             gloss_cells = []
             for i, word in enumerate(words):
-                print_baseline(number, baseline_str, words, i)
+                print_baseline(designation, baseline_str, words, i)
                 click.echo(translation_str)
                 if orthography_case_sensitive:
                     raise ValueError("can't handle case-sensitive orthographies yet")
@@ -69,7 +81,7 @@ def parse(ctx, text_fp: Path, line_number: int=None):
                 known_parses_by_word[word][parse_str] += 1
                 glosses_this_word = []
                 for j, morpheme in enumerate(morphemes):
-                    print_baseline(number, baseline_str, words, i, morphemes, j)
+                    print_baseline(designation, baseline_str, words, i, morphemes, j)
                     click.echo(translation_str)
                     gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
                     known_glosses_by_morpheme[morpheme][gloss_str] += 1
@@ -85,15 +97,16 @@ def parse(ctx, text_fp: Path, line_number: int=None):
             gloss_row = Row(DEFAULT_GLOSS_LABEL, gloss_cells)
             new_rows += [parse_row, gloss_row]
 
-            new_line = Line(number, new_rows)
+            new_line = Line(designation, new_rows)
             click.echo(f"new_line:\n{new_line.to_string_for_text_file()}\n")
-            new_lines_by_number[new_line.designation] = new_line
+            new_lines_by_designation[new_line.designation] = new_line
     except KeyboardInterrupt:
         click.echo("\nQuitting parsing")
     finally:
         # construct the output string to replace the input file's contents
         # TODO put this in its own function
-        new_lines = [v for k,v in sorted(new_lines_by_number.items())]
+        # DON'T RESORT! let it stay in user's order
+        new_lines = [new_lines_by_designation[desig] for desig in line_designations_in_order]
         s_to_write = ""
         locations_checked = set()
         for i, l in enumerate(new_lines):
@@ -107,7 +120,7 @@ def parse(ctx, text_fp: Path, line_number: int=None):
         residue_at_end = residues_by_location.get(final_location, "")
         s_to_write += residue_at_end
         assert set(residues_by_location.keys()) - locations_checked == set(), "failed to check for residues at some locations"
-        with open(text_fp, "w") as f:
+        with open(new_text_fp, "w") as f:
             f.write(s_to_write)
 
     # TODO print the edited line with rows in order, to some output file that could then [replace / be merged with] the input to update it
@@ -115,7 +128,7 @@ def parse(ctx, text_fp: Path, line_number: int=None):
 
     # TODO commands to implement when reading user input (no matter what input we are expecting, if we get a command then go do that instead)
     # :b = go back
-    # :{number} = go re-parse line of this number
+    # :{designation} = go re-parse line of this designation
     # :q = quit
 
 
@@ -258,7 +271,7 @@ def get_lines_from_text_file(text_file: Path):
     lines = []
     row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
     for line_group in line_groups:
-        line_number = None
+        line_designation = None
         row_strs = line_group.split("\n")
         rows = []
         row_length = None
@@ -279,8 +292,8 @@ def get_lines_from_text_file(text_file: Path):
                 label = RowLabel(label_str, aligned=False)
                 row_labels_by_string[label_str] = label
 
-            if label == DEFAULT_LINE_NUMBER_LABEL:
-                line_number = row_text
+            if label == DEFAULT_LINE_DESIGNATION_LABEL:
+                line_designation = row_text
 
             if label.is_aligned():
                 cell_texts = row_text.split(Row.INTRA_ROW_DELIMITER)
@@ -298,7 +311,7 @@ def get_lines_from_text_file(text_file: Path):
             
             row = Row(label, cells)
             rows.append(row)
-        line = Line(line_number, rows)
+        line = Line(line_designation, rows)
         lines.append(line)
     return lines, residues_by_location
 
@@ -309,7 +322,7 @@ def get_line_group_strings_from_text_file(text_file: Path):
     l = contents.split(Line.BEFORE_LINE)
     groups = []
     residue_before_first_group = l[0]
-    residues_by_location = {-0.5: residue_before_first_group}  # location is +/- 0.5 from group index (regardless of the group's labeled number)
+    residues_by_location = {-0.5: residue_before_first_group}  # location is +/- 0.5 from group index (regardless of the group's labeled number/designation)
     for s in l[1:]:
         group, *residues = s.split(Line.AFTER_LINE)  # there may be stray AFTER_LINE delimiters in the residue
         groups.append(group)
@@ -327,7 +340,7 @@ def get_line_group_strings_from_text_file(text_file: Path):
     return groups, residues_by_location
 
 
-def print_baseline(number, baseline_text, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None) -> None:
+def print_baseline(designation, baseline_text, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None) -> None:
     highlight_word = word_index_to_highlight is not None
     highlight_morpheme = morpheme_index_to_highlight is not None
     if highlight_word and highlight_morpheme:
@@ -349,7 +362,7 @@ def print_baseline(number, baseline_text, words=None, word_index_to_highlight=No
     else:
         text = baseline_text
     
-    click.echo(f"{number}. {text}")
+    click.echo(f"{designation}. {text}")
 
 
 def is_command(s: str) -> bool:
