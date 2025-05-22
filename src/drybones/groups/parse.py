@@ -125,13 +125,13 @@ def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_
     for i, word in enumerate(words):
         print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i)
         click.echo(translation_str)
-        word = remove_punctuation(word.lower())
+        word = get_word_key_from_baseline_word(word)
 
         if word not in known_analyses_by_word:
             analysis = None
         else:
             analysis = get_analysis_from_user(word, known_analyses_by_word)
-        
+
         if analysis is not None:
             parse = analysis.parse
             glosses = analysis.glosses
@@ -203,6 +203,10 @@ def remove_punctuation(word_str):
     return res
 
 
+def get_word_key_from_baseline_word(word):
+    return remove_punctuation(word.lower())
+
+
 def get_known_analyses(lines):
     known_analyses_by_word = defaultdict(Counter)
     baseline_label = DEFAULT_BASELINE_LABEL
@@ -219,7 +223,7 @@ def get_known_analyses(lines):
             if has_parse and has_gloss:
                 # normal case, construct the analysis
                 for bl_cell, parse_cell, gloss_cell in zip(baseline_row, parse_row, gloss_row, strict=True):
-                    bl_str = remove_punctuation(bl_cell.to_str())
+                    bl_str = get_word_key_from_baseline_word(bl_cell.to_str())
                     morpheme_strs = parse_cell.strs
                     parse = Parse(morpheme_strs)
                     glosses = gloss_cell.strs
