@@ -19,8 +19,26 @@ from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_
 from drybones.WordAnalysis import WordAnalysis
 
 
+# feature requests/ideas past v0.0.1 (not necessary right now, and I should focus now on parsing as much as I can with the existing features and not go back into development mode for a while)
 # TODO get it to ignore inline comments like <S1:> for parsing/glossing, but keep them around in the strings (and also put them in the corresponding place in the parse/gloss)
 # TODO figure out if/how I want to implement morphemes as sets of allomorphs, e.g. connecting "sah" to "sa/saV" (the initial of the LVC "sah-i- / sa-hi-" depending on analysis)
+# TODO find where a certain gloss/parse/analysis comes from
+# TODO edit an already-parsed line
+# TODO mass reassign one analysis to another
+# TODO when creating a new parse, show analyses' gloss sets that match it (often happens that, when the baseline has diacritic differences from wherever the analysis is connected to, you want the same parse/gloss for a different form)
+# TODO implement diacritic-free matching of baseline strings (but keep the resulting suggestions as lower-priority than those that match the diacritics, could even do this based on the number of diacritic differences so you have a good ranking)
+# TODO move the ReplaceAccents.py code into a DryBones command
+# TODO show concordances of a word form, morpheme form, or gloss
+# TODO once I have more than one file worked on in DryBones, draw the known values from all of them
+# TODO maybe starting commands with a simpler key would be better, such as '/' or '\', since ':' requires also pressing shift
+# TODO command during analysis choice dialogue: "/f {number}" to search for where that analysis is used
+# TODO show some indication of acceptability for glosses/parses/analyses, since some are only used in unacceptable sentences, so I know the word doesn't actually mean that (although caveat that it could be unacceptable for some other reason in the sentence)
+# could do better prediction of most likely glosses? e.g. based on the preceding morpheme; but this would be for way later and would probably introduce performance problems, don't do anything fancy right now, keep it simple or else it shouldn't be called DryBones (since you came up with that based on the phrase "bare-bones")
+# TODO show line's parse/gloss in progress as the user chooses each thing (like how it's shown at the end once you've parsed the whole line, but want this at each stage so I can check easily what I just told it without scrolling up too much)
+# TODO show tags, search by tags
+# TODO highlight currently selected option when user types a number
+# TODO allow use of arrow up/down to choose options
+# TODO do we want to clear the screen at each step in the parsing? so that certain things appear in the same place to the eyes? (e.g. first option, the sentence itself) could reduce amount of eye-scanning needed for parseng. this could be a flag passed to the command to allow user preference
 
 
 @click.command
@@ -193,10 +211,10 @@ def remove_punctuation(word_str):
     # for purposes of identifying if we have a parse of this word
     res = word_str
     try:
-        if any(res.endswith(x) for x in [".", ",", "?", "!", ";"]):
+        if any(res.endswith(x) for x in [".", ",", "?", "!", ";", ")"]):
             res = res[:-1]
-        if res[0] == "(" and res[-1] == ")":
-            res = res[1:-1]
+        if res.startswith("("):
+            res = res[1:]
     except IndexError:
         click.echo(f"removing punctuation from {word_str!r} resulted in blank string", err=True)
         raise click.Abort()
