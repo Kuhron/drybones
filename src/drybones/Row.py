@@ -36,3 +36,6 @@ class Row:
     def __str__(self, *args, **kwargs):
         return self.to_str(*args, **kwargs)
     
+    def relabel(self, label: RowLabel):
+        return Row(label, self.cells)
+    

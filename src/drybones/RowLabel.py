@@ -31,6 +31,9 @@ class RowLabel:
     
     def __hash__(self):
         return hash(repr(self))
+    
+    def relabel(self, string):
+        return RowLabel(string, self.aligned)
 
 
 DEFAULT_LINE_DESIGNATION_LABEL = RowLabel("N", aligned=False)

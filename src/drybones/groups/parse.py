@@ -12,8 +12,10 @@ from colorama import Fore, Back, Style
 colorama_init()
 
 from drybones.Cell import Cell
+from drybones.FileEditingUtil import setup_file_editing_operation, finish_file_editing_operation
 from drybones.Line import Line
 from drybones.Parse import Parse
+from drybones.ReadingUtil import get_lines_from_all_text_files_in_dir
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_PRODUCTION_LABEL, DEFAULT_JUDGMENT_LABEL
 from drybones.WordAnalysis import WordAnalysis
@@ -47,26 +49,26 @@ from drybones.WordAnalysis import WordAnalysis
 @click.option("--shuffle", "-s", type=bool, default=False, help="Shuffle the lines during parsing.")
 @click.option("--overwrite", "-o", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
-def parse(ctx, text_fp: Path, line_designation, shuffle, overwrite):
+def parse(ctx, text_fp, line_designation, shuffle, overwrite):
     """Parse text contents."""
-    if overwrite:
-        new_text_fp = text_fp
-    else:
-        new_text_fp = text_fp.parent / (text_fp.stem + "_dryout.txt")
-
-    lines, residues_by_location = get_lines_from_text_file(text_fp)
-    line_designations_in_order = [l.designation for l in lines]
-
-    new_lines_by_designation = {l.designation: l for l in lines}
+    new_text_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation = setup_file_editing_operation(text_fp, overwrite)
 
     if line_designation is not None:
-        lines_to_parse = [new_lines_by_designation[line_designation]]
+        try:
+            lines_to_parse = [new_lines_by_designation[line_designation]]
+        except KeyError:
+            click.echo(f"No line with designation {line_designation!r} was found.", err=True)
+            return
     else:
         lines_to_parse = lines
-        if shuffle:
-            random.shuffle(lines_to_parse)
+    
+    if shuffle:
+        random.shuffle(lines_to_parse)
+    
+    lines_to_parse = [line for line in lines_to_parse if line.has_baseline() and not line.is_parsed_and_glossed()]
 
-    known_analyses_by_word = get_known_analyses(lines)
+    lines_from_all_files = get_lines_from_all_text_files_in_dir(text_fp.parent)
+    known_analyses_by_word = get_known_analyses(lines_from_all_files)
     known_parses_by_word = get_known_parses(known_analyses_by_word)
     known_glosses_by_morpheme = get_known_glosses(known_analyses_by_word)
 
@@ -74,22 +76,20 @@ def parse(ctx, text_fp: Path, line_designation, shuffle, overwrite):
     # but I could see it being used for things like restricting the text to ASCII / avoiding diacritics
     #     for the purposes of typing things up easily
 
-    try:
-        for line in lines_to_parse:
-            if line.is_parsed_and_glossed():
-                if line_designation is not None:
-                    # user asked for a specific line, tell them what happened
-                    click.echo(f"line {line_designation} is already parsed and glossed")
-                continue
-            baseline_row = line[DEFAULT_BASELINE_LABEL]
-            if baseline_row is None:
-                continue
-            known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation)
-    except KeyboardInterrupt:
-        click.echo("\nQuitting parsing")
-    finally:
-        new_lines = [new_lines_by_designation[desig] for desig in line_designations_in_order]
-        output_updated_lines(new_lines, residues_by_location, new_text_fp)
+    if len(lines_to_parse) == 0:
+        if line_designation is not None:
+            # user asked for a specific line, tell them what happened
+            click.echo(f"Line {line_designation} is already parsed and glossed.")
+        else:
+            click.echo("This file is already completely parsed and glossed.")
+    else:
+        try:
+            for line in lines_to_parse:
+                known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation)
+        except KeyboardInterrupt:
+            click.echo("\nQuitting parsing")
+        finally:
+            finish_file_editing_operation(new_text_fp, residues_by_location, line_designations_in_order, new_lines_by_designation)
 
     # TODO commands to implement when reading user input (no matter what input we are expecting, if we get a command then go do that instead)
     # :b = go back
@@ -187,33 +187,13 @@ def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_
     return known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation
 
 
-def output_updated_lines(new_lines, residues_by_location, new_text_fp):
-    # construct the output string to replace the input file's contents
-    # DON'T RE-SORT! let it stay in user's order
-    s_to_write = ""
-    locations_checked = set()
-    for i, l in enumerate(new_lines):
-        location = i-0.5
-        locations_checked.add(location)
-        residue_before_line = residues_by_location.get(location, "")
-        line_str = l.to_string_for_text_file() 
-        s_to_write += residue_before_line + line_str
-    final_location = i+0.5  # actually using the final value of a loop variable outside the loop? crazy
-    locations_checked.add(final_location)
-    residue_at_end = residues_by_location.get(final_location, "")
-    s_to_write += residue_at_end
-    assert set(residues_by_location.keys()) - locations_checked == set(), "failed to check for residues at some locations"
-    with open(new_text_fp, "w") as f:
-        f.write(s_to_write)
-
-
 def remove_punctuation(word_str):
     # for purposes of identifying if we have a parse of this word
     res = word_str
     try:
-        if any(res.endswith(x) for x in [".", ",", "?", "!", ";", ")"]):
+        while any(res.endswith(x) for x in [".", ",", "?", "!", ";", ")", "\""]):
             res = res[:-1]
-        if res.startswith("("):
+        while any(res.startswith(x) for x in ["(", "\""]):
             res = res[1:]
     except IndexError:
         click.echo(f"removing punctuation from {word_str!r} resulted in blank string", err=True)
@@ -330,6 +310,11 @@ def get_parse_from_user(word, known_parses_by_word) -> Parse:
             break
         except ValueError:
             parse_str = inp if inp != "" else word
+
+            if Row.INTRA_ROW_DELIMITER in parse_str:
+                click.echo(f"the character {Row.INTRA_ROW_DELIMITER!r} is not allowed in the parse of an individual word")
+                return get_parse_from_user(word, known_parses_by_word)
+    
             morpheme_strs = parse_str.split(MORPHEME_DELIMITER)
             parse = Parse(morpheme_strs)
             break
@@ -361,6 +346,9 @@ def get_gloss_from_user(morpheme, known_glosses_by_morpheme):
     if Cell.INTRA_CELL_DELIMITER in gloss:
         click.echo(f"the character {Cell.INTRA_CELL_DELIMITER!r} is not allowed in the gloss of an individual morpheme")
         return get_gloss_from_user(morpheme, known_glosses_by_morpheme)
+    elif Row.INTRA_ROW_DELIMITER in gloss:
+        click.echo(f"the character {Row.INTRA_ROW_DELIMITER!r} is not allowed in the gloss of an individual morpheme")
+        return get_gloss_from_user(morpheme, known_glosses_by_morpheme)
 
     if gloss == "":
         gloss = UNKNOWN_GLOSS
@@ -389,80 +377,6 @@ def show_ordered_suggestions(ordered_suggestions, n=5, display_func=None, string
         for i in range(n):
             s = display_func(ordered_suggestions[i])
             click.echo(f"{i+1}. {s}")
-
-
-def get_lines_from_text_file(text_file: Path):
-    line_groups, residues_by_location = get_line_group_strings_from_text_file(text_file)
-    lines = []
-    row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
-    for line_group in line_groups:
-        line_designation = None
-        row_strs = line_group.split("\n")
-        rows = []
-        row_length = None
-        for row_str in row_strs:
-            if row_str == "":
-                continue
-            label_str, *row_text_pieces = row_str.split(RowLabel.AFTER_LABEL_CHAR)
-            if len(row_text_pieces) == 0:
-                click.echo(f"row has no label:\n{row_str!r}\n")
-                raise click.Abort()
-            else:
-                row_text = RowLabel.AFTER_LABEL_CHAR.join(row_text_pieces)
-            
-            row_text = row_text.strip()
-            try:
-                label = row_labels_by_string[label_str]
-            except KeyError:
-                label = RowLabel(label_str, aligned=False)
-                row_labels_by_string[label_str] = label
-
-            if label == DEFAULT_LINE_DESIGNATION_LABEL:
-                line_designation = row_text
-
-            if label.is_aligned():
-                cell_texts = row_text.split(Row.INTRA_ROW_DELIMITER)
-                cells = []
-                for cell_text in cell_texts:
-                    cell = Cell(cell_text.split(Cell.INTRA_CELL_DELIMITER))
-                    cells.append(cell)
-                this_row_length = len(cells)
-                if row_length is None:
-                    row_length = this_row_length
-                else:
-                    assert this_row_length == row_length, f"expected row of length {row_length} but got {this_row_length}:\n{row_text}"
-            else:
-                cells = [Cell([row_text])]
-            
-            row = Row(label, cells)
-            rows.append(row)
-        line = Line(line_designation, rows)
-        lines.append(line)
-    return lines, residues_by_location
-
-
-def get_line_group_strings_from_text_file(text_file: Path):
-    with open(text_file) as f:
-        contents = f.read()
-    l = contents.split(Line.BEFORE_LINE)
-    groups = []
-    residue_before_first_group = l[0]
-    residues_by_location = {-0.5: residue_before_first_group}  # location is +/- 0.5 from group index (regardless of the group's labeled number/designation)
-    for s in l[1:]:
-        group, *residues = s.split(Line.AFTER_LINE)  # there may be stray AFTER_LINE delimiters in the residue
-        groups.append(group)
-        if len(residues) > 0:
-            residue = Line.AFTER_LINE.join(residues)
-            if len(residue.strip()) > 0:
-                click.echo(f"ignoring text outside of line block:\n{residue!r}\n")
-            last_group_index = len(groups) - 1
-            location = last_group_index + 0.5
-            assert location not in residues_by_location
-            residues_by_location[location] = residue
-    # TODO make a LineGroupString object and ResidueString object for holding the original file contents after breaking it apart
-    # then can call a function on a LineGroupString to parse it into a Line
-    # but want the top-level parse command call to be able to just grab the original string for a group that was unedited, and for a residue, without me stripping off whitespace and then adding it back on (error prone)
-    return groups, residues_by_location
 
 
 def print_baseline(designation, baseline_text, production_str, judgment_str, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None) -> None:

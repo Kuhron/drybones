@@ -1,7 +1,7 @@
 from typing import List
 
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL
+from drybones.RowLabel import RowLabel, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_BASELINE_LABEL
 from drybones.Validation import Validated, Invalidated, InvalidationError
 
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
@@ -54,6 +54,10 @@ class Line:
             raise TypeError(f"invalid type for subscripting Line: {type(index)}")
         return self.row_by_label.get(index)
     
+    def has_baseline(self) -> bool:
+        baseline_row = self[DEFAULT_BASELINE_LABEL]
+        return baseline_row is not None
+
     def is_parsed_and_glossed(self) -> bool:
         return DEFAULT_PARSE_LABEL in self.row_by_label and DEFAULT_GLOSS_LABEL in self.row_by_label
     
