@@ -1,11 +1,18 @@
 # don't bother inheriting from string, I tried that and it's a headache
 
+
 class RowLabel:
     AFTER_LABEL_CHAR = ":"
+    ALL_OTHER_ROWS_CHAR = "*"
+    MULTIPLE_ROWS_SEPARATOR_CHAR = "/"
+    PROHIBITED_CHARS = [AFTER_LABEL_CHAR, ALL_OTHER_ROWS_CHAR, MULTIPLE_ROWS_SEPARATOR_CHAR]
+    PROHIBITED_STRINGS = []
 
     def __init__(self, string, aligned: bool):
         assert not any(x in string for x in [" ", "\t", "\n", "\r"]), "whitespace not allowed in row label"
         assert RowLabel.AFTER_LABEL_CHAR not in string, f"do not include '{RowLabel.AFTER_LABEL_CHAR}' when initializing row label"
+        assert not any(x in string for x in RowLabel.PROHIBITED_CHARS), f"the label {string!r} contains the following prohibited characters:\n{sorted(set(x for x in string if x in RowLabel.PROHIBITED_CHARS))}"
+        assert string not in RowLabel.PROHIBITED_STRINGS, f"the label {string!r} is prohibited"
         self.string = string
         self.aligned = aligned
 

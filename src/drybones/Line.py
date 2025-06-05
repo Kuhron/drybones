@@ -61,7 +61,7 @@ class Line:
     def is_parsed_and_glossed(self) -> bool:
         return DEFAULT_PARSE_LABEL in self.row_by_label and DEFAULT_GLOSS_LABEL in self.row_by_label
     
-    def to_string_for_text_file(self) -> str:
+    def to_string_for_drybones_file(self) -> str:
         strs = []
         for row in self.rows:
             s = row.to_str(with_label=True)

@@ -12,7 +12,7 @@ from drybones.RowLabel import RowLabel
 @click.argument("text_fp", required=True, type=Path)
 @click.option("--mapping", "-m", required=True, type=str)
 # @click.option("--shuffle", "-s", type=bool, default=False, help="Shuffle the lines during parsing.")
-@click.option("--overwrite", "-o", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
+@click.option("--overwrite", "-w", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
 def map(ctx, text_fp, mapping, overwrite):
     """Relabel rows."""

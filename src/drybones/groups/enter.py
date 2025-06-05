@@ -18,7 +18,7 @@ def enter(text_name):
     click.echo(f"Now entering data for text {text_name!r}. Press Ctrl+C to cancel current command, Ctrl+D to exit.")
     # TODO figure out how to get the Ctrl+C and Ctrl+D behavior to work with Click exceptions: https://click.palletsprojects.com/en/stable/exceptions/
 
-    p = Path(f"texts/{text_name}.txt")
+    p = Path(f"texts/{text_name}.dry")
     p.parent.mkdir(exist_ok=True)
     if p.exists():
         raise FileExistsError(f"would overwrite text file at {p}")

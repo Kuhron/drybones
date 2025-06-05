@@ -213,7 +213,7 @@ if __name__ == "__main__":
     # labels_of_aligned_rows = ["Bl", "Mp", "Lx", "Gl", "Wc"]
     labels_of_aligned_rows = ["Bl", "Mp", "Gl", "Wc"]  # test what happens when we change which rows are aligned
 
-    txt_fnames = sorted([x for x in os.listdir(text_dir) if x.endswith(".txt")])
-    for fname in txt_fnames:
+    dry_fnames = sorted([x for x in os.listdir(text_dir) if x.endswith(".dry")])
+    for fname in dry_fnames:
         fp = os.path.join(text_dir, fname)
         print_text_line_by_line(fp, labels_of_aligned_rows)

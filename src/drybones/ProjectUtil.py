@@ -46,15 +46,6 @@ def get_project_name_from_drybones_dir(drybones_dir:Path) -> str:
         return None
 
 
-# def get_current_project_text_names():
-#     cwd = Path.cwd()
-
-#     # maybe should have DryBones keep track of which files are actual texts and which are not instead of inferring it from the file name/contents
-#     # but for now, keep it simple
-#     txt_fnames = [x for x in os.listdir(cwd) if x.endswith(".txt")]
-#     return [os.path.splitext(fname)[0] for fname in txt_fnames]
-
-
 def get_project_dir_from_project_name(project_name:str, parent_dir:Path=None) -> Path:
     if parent_dir is None:
         parent_dir = Path.cwd()

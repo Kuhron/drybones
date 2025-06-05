@@ -10,13 +10,13 @@ from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING
 
 
-def get_text_file_from_text_name(text_name):
-    return f"{text_name}.txt"
+def get_drybones_file_from_text_name(text_name):
+    return f"{text_name}.dry"
 
 
 def get_lines_from_text_name(text_name):
-    fp = get_text_file_from_text_name(text_name)
-    return get_lines_from_text_file(fp)
+    fp = get_drybones_file_from_text_name(text_name)
+    return get_lines_from_drybones_file(fp)
 
 
 def get_raw_lines_from_file(fp, with_newlines=False):
@@ -30,8 +30,8 @@ def get_raw_lines_from_file(fp, with_newlines=False):
         return [l[:-1] for l in lines]
 
 
-def get_lines_from_text_file(text_file: Path):
-    line_groups, residues_by_location = get_line_group_strings_from_text_file(text_file)
+def get_lines_from_drybones_file(fp: Path):
+    line_groups, residues_by_location = get_line_group_strings_from_drybones_file(fp)
     lines = []
     row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
     for line_group in line_groups:
@@ -80,8 +80,8 @@ def get_lines_from_text_file(text_file: Path):
     return lines, residues_by_location
 
 
-def get_line_group_strings_from_text_file(text_file: Path):
-    with open(text_file) as f:
+def get_line_group_strings_from_drybones_file(fp: Path):
+    with open(fp) as f:
         contents = f.read()
     l = contents.split(Line.BEFORE_LINE)
     groups = []
@@ -104,10 +104,10 @@ def get_line_group_strings_from_text_file(text_file: Path):
     return groups, residues_by_location
 
 
-def get_lines_from_all_text_files_in_dir(d: Path, extension=".txt"):
+def get_lines_from_all_drybones_files_in_dir(d: Path, extension=".dry"):
     fps = d.glob("**/*" + extension)
     lines = []
     for fp in fps:
-        these_lines, residues = get_lines_from_text_file(fp)
+        these_lines, residues = get_lines_from_drybones_file(fp)
         lines += these_lines
     return lines

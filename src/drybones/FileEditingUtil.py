@@ -1,15 +1,15 @@
-from drybones.ReadingUtil import get_lines_from_text_file
+from drybones.ReadingUtil import get_lines_from_drybones_file
 
 
 def setup_file_editing_operation(text_fp, overwrite):
     if overwrite:
         new_text_fp = text_fp
     else:
-        new_text_fp = text_fp.parent / (text_fp.stem + "_dryout.txt")
+        new_text_fp = text_fp.parent / (text_fp.stem + "_dryout.dry")
         if new_text_fp.exists():
             raise FileExistsError(new_text_fp)
 
-    lines, residues_by_location = get_lines_from_text_file(text_fp)
+    lines, residues_by_location = get_lines_from_drybones_file(text_fp)
     line_designations_in_order = [l.designation for l in lines]
     new_lines_by_designation = {l.designation: l for l in lines}
 
@@ -30,7 +30,7 @@ def output_updated_lines(new_lines, residues_by_location, new_text_fp):
         location = i-0.5
         locations_checked.add(location)
         residue_before_line = residues_by_location.get(location, "")
-        line_str = l.to_string_for_text_file() 
+        line_str = l.to_string_for_drybones_file() 
         s_to_write += residue_before_line + line_str
     final_location = i+0.5  # actually using the final value of a loop variable outside the loop? crazy
     locations_checked.add(final_location)
