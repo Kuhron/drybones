@@ -9,17 +9,17 @@ from drybones.RowLabel import RowLabel
 
 
 @click.command
-@click.argument("text_fp", required=True, type=Path)
+@click.argument("drybones_fp", required=True, type=Path)
 @click.option("--mapping", "-m", required=True, type=str)
 # @click.option("--shuffle", "-s", type=bool, default=False, help="Shuffle the lines during parsing.")
 @click.option("--overwrite", "-w", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
-def map(ctx, text_fp, mapping, overwrite):
+def map(ctx, drybones_fp, mapping, overwrite):
     """Relabel rows."""
     mapping = parse_mapping_str(mapping)
     print(mapping)
 
-    new_text_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation = setup_file_editing_operation(text_fp, overwrite)
+    new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation = setup_file_editing_operation(drybones_fp, overwrite)
     all_label_strs = set()
     for line in lines:
         for row in line.rows:
@@ -44,7 +44,7 @@ def map(ctx, text_fp, mapping, overwrite):
         new_line = Line(line.designation, new_rows)
         new_lines_by_designation[new_line.designation] = new_line
 
-    finish_file_editing_operation(new_text_fp, residues_by_location, line_designations_in_order, new_lines_by_designation)
+    finish_file_editing_operation(new_drybones_fp, residues_by_location, line_designations_in_order, new_lines_by_designation)
 
 
 def parse_mapping_str(s):

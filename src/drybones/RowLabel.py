@@ -5,8 +5,10 @@ class RowLabel:
     AFTER_LABEL_CHAR = ":"
     ALL_OTHER_ROWS_CHAR = "*"
     MULTIPLE_ROWS_SEPARATOR_CHAR = "/"
-    PROHIBITED_CHARS = [AFTER_LABEL_CHAR, ALL_OTHER_ROWS_CHAR, MULTIPLE_ROWS_SEPARATOR_CHAR]
-    PROHIBITED_STRINGS = []
+    RESIDUES_PSEUDO_LABEL = "residues"
+
+    PROHIBITED_CHARS = [" ", "\t", "\n", AFTER_LABEL_CHAR, ALL_OTHER_ROWS_CHAR, MULTIPLE_ROWS_SEPARATOR_CHAR]
+    PROHIBITED_STRINGS = [RESIDUES_PSEUDO_LABEL]
 
     def __init__(self, string, aligned: bool):
         assert not any(x in string for x in [" ", "\t", "\n", "\r"]), "whitespace not allowed in row label"

@@ -44,14 +44,14 @@ from drybones.WordAnalysis import WordAnalysis
 
 
 @click.command
-@click.argument("text_fp", required=True, type=Path)
+@click.argument("drybones_fp", required=True, type=Path)
 @click.argument("line_designation", required=False, type=str)
 @click.option("--shuffle", "-s", type=bool, default=False, help="Shuffle the lines during parsing.")
 @click.option("--overwrite", "-w", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
-def parse(ctx, text_fp, line_designation, shuffle, overwrite):
+def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     """Parse text contents."""
-    new_text_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation = setup_file_editing_operation(text_fp, overwrite)
+    new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation = setup_file_editing_operation(drybones_fp, overwrite)
 
     if line_designation is not None:
         try:
@@ -67,7 +67,7 @@ def parse(ctx, text_fp, line_designation, shuffle, overwrite):
     
     lines_to_parse = [line for line in lines_to_parse if line.has_baseline() and not line.is_parsed_and_glossed()]
 
-    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(text_fp.parent)
+    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(drybones_fp.parent)
     known_analyses_by_word = get_known_analyses(lines_from_all_files)
     known_parses_by_word = get_known_parses(known_analyses_by_word)
     known_glosses_by_morpheme = get_known_glosses(known_analyses_by_word)
@@ -89,7 +89,7 @@ def parse(ctx, text_fp, line_designation, shuffle, overwrite):
         except KeyboardInterrupt:
             click.echo("\nQuitting parsing")
         finally:
-            finish_file_editing_operation(new_text_fp, residues_by_location, line_designations_in_order, new_lines_by_designation)
+            finish_file_editing_operation(new_drybones_fp, residues_by_location, line_designations_in_order, new_lines_by_designation)
 
     # TODO commands to implement when reading user input (no matter what input we are expecting, if we get a command then go do that instead)
     # :b = go back
