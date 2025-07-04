@@ -38,6 +38,11 @@ class RowLabel:
             return NotImplemented
         return self.string == other.string
     
+    def __lt__(self, other):
+        if type(other) is not RowLabel:
+            return NotImplemented
+        return self.string < other.string
+    
     def __hash__(self):
         return hash(repr(self))
     

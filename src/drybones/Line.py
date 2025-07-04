@@ -67,3 +67,10 @@ class Line:
             s = row.to_str(with_label=True)
             strs.append(s)
         return Line.BEFORE_LINE + "\n".join(strs) + Line.AFTER_LINE
+
+    def get_all_row_labels(self, string=False):
+        s = set(self.row_by_label.keys())
+        if string:
+            return {x.string for x in s}
+        else:
+            return s

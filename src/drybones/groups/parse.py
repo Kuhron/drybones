@@ -65,7 +65,8 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     if shuffle:
         random.shuffle(lines_to_parse)
     
-    lines_to_parse = [line for line in lines_to_parse if line.has_baseline() and not line.is_parsed_and_glossed()]
+    lines_with_baselines = [line for line in lines_to_parse if line.has_baseline()]
+    lines_to_parse = [line for line in lines_with_baselines if not line.is_parsed_and_glossed()]
 
     lines_from_all_files = get_lines_from_all_drybones_files_in_dir(drybones_fp.parent)
     known_analyses_by_word = get_known_analyses(lines_from_all_files)
@@ -80,8 +81,10 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
         if line_designation is not None:
             # user asked for a specific line, tell them what happened
             click.echo(f"Line {line_designation} is already parsed and glossed.")
+        elif len(lines_with_baselines) == 0:
+            click.echo(f"This file has no baselines to parse.")
         else:
-            click.echo("This file is already completely parsed and glossed.")
+            click.echo(f"This file is already completely parsed and glossed ({len(lines)} lines, {len(lines_with_baselines)} with baselines).")
     else:
         try:
             for line in lines_to_parse:
