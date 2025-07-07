@@ -17,11 +17,20 @@ class Line:
         self.rows = rows
         self.validate_row_lengths()
         self.row_by_label = self.construct_row_by_label()
+        self.row_label_by_string = self.construct_row_label_by_string()
 
     def construct_row_by_label(self):
         d = {}
         for r in self.rows:
             d[r.label] = r
+        return d
+    
+    def construct_row_label_by_string(self):
+        d = {}
+        for label in self.row_by_label.keys():
+            s = label.string
+            assert s not in d, f"duplicate label string {s!r}"
+            d[s] = label
         return d
 
     def validate_row_lengths(self):
@@ -50,9 +59,15 @@ class Line:
         return f"<Line {self.designation} {self.rows!r}>"
     
     def __getitem__(self, index):
-        if type(index) is not RowLabel:
+        if type(index) is RowLabel:
+            return self.row_by_label.get(index)
+        elif type(index) is str:
+            label = self.row_label_by_string.get(index)
+            if label is None:
+                raise KeyError(f"no row label found with string {index!r}")
+            return self.row_by_label.get(label)
+        else:
             raise TypeError(f"invalid type for subscripting Line: {type(index)}")
-        return self.row_by_label.get(index)
     
     def has_baseline(self) -> bool:
         baseline_row = self[DEFAULT_BASELINE_LABEL]

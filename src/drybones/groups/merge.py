@@ -2,6 +2,8 @@ import click
 from pathlib import Path
 
 from drybones.FileEditingUtil import setup_file_editing_operation, finish_file_editing_operation
+from drybones.Line import Line
+from drybones.Row import Row
 from drybones.RowLabel import RowLabel
 
 
@@ -26,23 +28,49 @@ def merge(ctx, input_fp1, rows1, input_fp2, rows2, output_fp):
     $ dry merge Hevi_Raw.dry "Baseline > BaselineRaw / BaselineToClean, Translation > TranslationRaw / TranslationToClean" Hevi.dry "*" Hevi_combined.dry
     """
 
-    _new_drybones_fp1, lines1, residues_by_location1, line_designations_in_order1, new_lines_by_designation1 = setup_file_editing_operation(input_fp1, overwrite=False)
-    _new_drybones_fp2, lines2, residues_by_location2, line_designations_in_order2, new_lines_by_designation2 = setup_file_editing_operation(input_fp2, overwrite=False)
+    _new_drybones_fp1, lines1, residues_by_location1, line_designations_in_order1, lines_by_designation1 = setup_file_editing_operation(input_fp1, overwrite=False)
+    _new_drybones_fp2, lines2, residues_by_location2, line_designations_in_order2, lines_by_designation2 = setup_file_editing_operation(input_fp2, overwrite=False)
 
     all_labels1 = get_all_row_labels(lines1)
     all_labels2 = get_all_row_labels(lines2)
 
-    print("labels1:", all_labels1)
-    print("labels2:", all_labels2)
-
     if line_designations_in_order1 != line_designations_in_order2:
         raise ValueError("line designations must match exactly, in the same order")
+    line_designations_in_order = line_designations_in_order1
 
     directives = parse_row_directives(input_fp1, rows1, all_labels1, input_fp2, rows2, all_labels2)
-    print("directives:", directives)
+    new_lines_by_designation = {}
 
-    # output it to the file
-    raise NotImplementedError
+    fp_to_index = {input_fp1: 0, input_fp2: 1}
+    
+    for desig in line_designations_in_order:
+        line1 = lines_by_designation1[desig]
+        line2 = lines_by_designation2[desig]
+        lines_for_getting_rows = [line1, line2]
+        rows = []
+        for fp, from_label_str, to_label_str in directives:
+            fp_index = fp_to_index[fp]
+            line_to_get_row_from = lines_for_getting_rows[fp_index]
+            try:
+                from_label = line_to_get_row_from.row_label_by_string[from_label_str]
+            except KeyError:
+                # this row label not in this line from the file where we want to take this row label from
+                continue
+            from_row = line_to_get_row_from[from_label]
+            to_label = from_label.relabel(to_label_str)
+            new_row = from_row.relabel(to_label)
+            rows.append(new_row)
+        new_line = Line(desig, rows)
+        new_lines_by_designation[desig] = new_line
+    
+    residues_by_location_chosen = None
+    for fp, from_label_str, to_label_str in directives:
+        if from_label_str == RowLabel.RESIDUES_PSEUDO_LABEL:
+            residues_by_location_chosen = [residues_by_location1, residues_by_location2][fp_to_index[fp]]
+            break
+
+    finish_file_editing_operation(new_drybones_fp=output_fp, residues_by_location=residues_by_location_chosen, line_designations_in_order=line_designations_in_order, new_lines_by_designation=new_lines_by_designation)
+    click.echo("done merging")
 
 
 def get_all_row_labels(lines):
@@ -60,15 +88,17 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
     residue_explicitly_mentioned = False
     all_other_rows_mentioned = False
     fp_for_all_other_rows = None
-    all_labels_for_all_other_rows = None
-    from_labels_seen_for_all_other_rows = None
+    all_labels_for_all_other_rows = set()
+    from_labels_seen_for_all_other_rows = set()
 
     row_labels1 = [x.strip() for x in s1.split(",")]
     row_labels2 = [x.strip() for x in s2.split(",")]
 
-    tups = []
+    directives = []
+    from_labels_seen1 = set()
+    from_labels_seen2 = set()
     for fp_index, fp, row_labels, all_labels in zip([1, 2], [fp1, fp2], [row_labels1, row_labels2], [all_labels1, all_labels2]):
-        from_labels_seen = set()
+        from_labels_seen = from_labels_seen1 if fp_index == 1 else from_labels_seen2  # if fp_index == 2
         for row_label in row_labels:
             try:
                 from_label, to_labels_str = row_label.split(">")
@@ -98,31 +128,47 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
                 fp_for_all_other_rows = fp
                 all_labels_for_all_other_rows = all_labels
                 from_labels_seen_for_all_other_rows = from_labels_seen
-
+                to_labels = []  # don't add "* -> *" as a mapping
 
             to_labels = [x.strip() for x in to_labels]
             for to_label in to_labels:
                 tup = (fp, from_label, to_label)
-                tups.append(tup)
-
-        labels_dropped = all_labels - from_labels_seen
-        if len(labels_dropped) > 0:
-            delim = "\n\t"
-            click.echo(f"These labels were not used from file {fp}:\n\t{delim.join(sorted(str(x) for x in labels_dropped))}\n")
+                directives.append(tup)
 
     if all_other_rows_mentioned:
         all_other_labels_to_use = all_labels_for_all_other_rows - from_labels_seen_for_all_other_rows
         for label in all_other_labels_to_use:
             tup = (fp_for_all_other_rows, label, label)
-            tups.append(tup)
+            directives.append(tup)
+            from_labels_seen_for_all_other_rows.add(label)  # do this after we've computed all_other_labels_to_use, so then we can see which labels were actually omitted from a file
 
         # include residue in * if it is not explicitly mentioned
         if not residue_explicitly_mentioned:
             new_tup = (fp_for_all_other_rows, residue_label, residue_label)
-            tups.append(new_tup)
+            directives.append(new_tup)
 
-    for fp, x, y in tups:
+    for fp, x, y in directives:
         assert type(x) is str, x
         assert type(y) is str, y
 
-    return tups
+    to_labels_seen = set()
+    click.echo("'dry merge' directives received:")
+    for fp, from_label, to_label in directives:
+        assert to_label not in to_labels_seen, f"duplicate label mapped to: {to_label}"
+        to_labels_seen.add(to_label)
+        click.echo(f"{[fp1, fp2].index(fp)+1} : {from_label} -> {to_label}")
+        if from_label == RowLabel.RESIDUES_PSEUDO_LABEL:
+            assert to_label == RowLabel.RESIDUES_PSEUDO_LABEL, "residues cannot be mapped from"
+        else:
+            assert to_label not in RowLabel.PROHIBITED_STRINGS, f"row label string {to_label!r} not allowed"
+    click.echo()
+
+    for fp, all_labels, from_labels_seen in zip([fp1, fp2], [all_labels1, all_labels2], [from_labels_seen1, from_labels_seen2]):
+        labels_dropped = all_labels - from_labels_seen
+        if len(labels_dropped) > 0:
+            delim = "\n\t"
+            click.echo(f"These labels were not used from file {fp}:\n\t{delim.join(sorted(str(x) for x in labels_dropped))}\n")
+        else:
+            click.echo(f"All labels were used from file {fp}\n")
+
+    return directives
