@@ -8,6 +8,7 @@ from pathlib import Path
 from drybones._version import __version__
 from drybones.GenericObject import GenericObject
 from drybones.RowLabel import DEFAULT_ALIGNED_ROW_LABELS
+from drybones.Constants import PROG_NAME_FOR_VERSION, PROG_NAME_FOR_COMMAND, DRYBONES_DIR_NAME, GLOBAL_CONFIG_FP, HOME_DIR, PROJECT_CONFIG_FILE_NAME
 
 
 STDIN_IS_TTY = sys.stdin.isatty()
@@ -15,15 +16,8 @@ STDOUT_IS_TTY = sys.stdout.isatty()
 STDERR_IS_TTY = sys.stderr.isatty()
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-PROG_NAME_FOR_VERSION = "DryBones"
-PROG_NAME_FOR_COMMAND = "dry"
 VERSION_MESSAGE = "%(prog)s, version %(version)s\nSource: https://github.com/Kuhron/drybones"
-HOME_DIR = Path.home()
-DRYBONES_DIR_NAME = ".drybones"
-GLOBAL_CONFIG_FP = HOME_DIR / ".drybones.conf"
-PROJECT_CONFIG_FILE_NAME = "project.yaml"
-if not GLOBAL_CONFIG_FP.exists():
-    GLOBAL_CONFIG_FP.touch()
+
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True)

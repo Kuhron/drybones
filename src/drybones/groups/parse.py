@@ -15,6 +15,7 @@ from drybones.Cell import Cell
 from drybones.FileEditingUtil import setup_file_editing_operation, finish_file_editing_operation
 from drybones.Line import Line
 from drybones.Parse import Parse
+from drybones.ProjectUtil import get_corpus_dir
 from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_PRODUCTION_LABEL, DEFAULT_JUDGMENT_LABEL
@@ -68,7 +69,8 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     lines_with_baselines = [line for line in lines_to_parse if line.has_baseline()]
     lines_to_parse = [line for line in lines_with_baselines if not line.is_parsed_and_glossed()]
 
-    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(drybones_fp.parent)
+    corpus_dir = get_corpus_dir(drybones_fp)
+    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir)
     known_analyses_by_word = get_known_analyses(lines_from_all_files)
     known_parses_by_word = get_known_parses(known_analyses_by_word)
     known_glosses_by_morpheme = get_known_glosses(known_analyses_by_word)

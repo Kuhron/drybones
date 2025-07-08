@@ -5,6 +5,7 @@ import click
 from pathlib import Path
 
 from drybones.Cell import Cell
+from drybones.Constants import DRYBONES_FILE_EXTENSION
 from drybones.Line import Line
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING
@@ -31,6 +32,7 @@ def get_raw_lines_from_file(fp, with_newlines=False):
 
 
 def get_lines_from_drybones_file(fp: Path):
+    click.echo(f"getting lines from {fp}")
     line_groups, residues_by_location = get_line_group_strings_from_drybones_file(fp)
     lines = []
     row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
@@ -44,7 +46,7 @@ def get_lines_from_drybones_file(fp: Path):
                 continue
             label_str, *row_text_pieces = row_str.split(RowLabel.AFTER_LABEL_CHAR)
             if len(row_text_pieces) == 0:
-                click.echo(f"row has no label:\n{row_str!r}\n")
+                click.echo(f"\nError! in file {fp}\nrow has no label:\n{row_str!r}\n", err=True)
                 raise click.Abort()
             else:
                 row_text = RowLabel.AFTER_LABEL_CHAR.join(row_text_pieces)
@@ -69,7 +71,9 @@ def get_lines_from_drybones_file(fp: Path):
                 if row_length is None:
                     row_length = this_row_length
                 else:
-                    assert this_row_length == row_length, f"expected row of length {row_length} but got {this_row_length}:\n{row_text}"
+                    if this_row_length != row_length:
+                        click.echo(f"\nError! in file {fp}\nexpected row of length {row_length} but got {this_row_length}:\n{row_text}", err=True)
+                        raise click.Abort()
             else:
                 cells = [Cell([row_text])]
             
@@ -77,6 +81,7 @@ def get_lines_from_drybones_file(fp: Path):
             rows.append(row)
         line = Line(line_designation, rows)
         lines.append(line)
+    click.echo(f"done getting lines from {fp}\n")
     return lines, residues_by_location
 
 
@@ -104,7 +109,7 @@ def get_line_group_strings_from_drybones_file(fp: Path):
     return groups, residues_by_location
 
 
-def get_lines_from_all_drybones_files_in_dir(d: Path, extension=".dry"):
+def get_lines_from_all_drybones_files_in_dir(d: Path, extension=DRYBONES_FILE_EXTENSION):
     fps = d.glob("**/*" + extension)
     lines = []
     for fp in fps:
