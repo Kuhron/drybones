@@ -66,18 +66,12 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     if shuffle:
         random.shuffle(lines_to_parse)
     
-    lines_with_baselines = [line for line in lines_to_parse if line.has_baseline()]
-    lines_to_parse = [line for line in lines_with_baselines if not line.is_parsed_and_glossed()]
-
-    corpus_dir = get_corpus_dir(drybones_fp)
-    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir)
-    known_analyses_by_word = get_known_analyses(lines_from_all_files)
-    known_parses_by_word = get_known_parses(known_analyses_by_word)
-    known_glosses_by_morpheme = get_known_glosses(known_analyses_by_word)
-
     orthography_case_sensitive = False  # does anyone in their right mind do this? only Klingon, I think
     # but I could see it being used for things like restricting the text to ASCII / avoiding diacritics
     #     for the purposes of typing things up easily
+    
+    lines_with_baselines = [line for line in lines_to_parse if line.has_baseline()]
+    lines_to_parse = [line for line in lines_with_baselines if not line.is_parsed_and_glossed()]
 
     if len(lines_to_parse) == 0:
         if line_designation is not None:
@@ -88,6 +82,11 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
         else:
             click.echo(f"This file is already completely parsed and glossed ({len(lines)} lines, {len(lines_with_baselines)} with baselines).")
     else:
+        corpus_dir = get_corpus_dir(drybones_fp)
+        lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir)
+        known_analyses_by_word = get_known_analyses(lines_from_all_files)
+        known_parses_by_word = get_known_parses(known_analyses_by_word)
+        known_glosses_by_morpheme = get_known_glosses(known_analyses_by_word)
         try:
             for line in lines_to_parse:
                 known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation)
@@ -216,35 +215,39 @@ def get_known_analyses(lines):
     parse_label = DEFAULT_PARSE_LABEL
     gloss_label = DEFAULT_GLOSS_LABEL
     for l in lines:
-        baseline_row = l[baseline_label]
-        parse_row = l[parse_label]
-        gloss_row = l[gloss_label]
-        has_baseline = baseline_row is not None
-        has_parse = parse_row is not None
-        has_gloss = gloss_row is not None
-        if has_baseline:
-            if has_parse and has_gloss:
-                # normal case, construct the analysis
-                for bl_cell, parse_cell, gloss_cell in zip(baseline_row, parse_row, gloss_row, strict=True):
-                    bl_str = get_word_key_from_baseline_word(bl_cell.to_str())
-                    morpheme_strs = parse_cell.strs
-                    parse = Parse(morpheme_strs)
-                    glosses = gloss_cell.strs
-                    analysis = WordAnalysis(parse, glosses)
-                    known_analyses_by_word[bl_str][analysis] += 1
-            elif has_parse or has_gloss:
-                click.echo(f"line is parsed or glossed but not both:\n{l}")
-                raise click.Abort()
+        try:
+            baseline_row = l[baseline_label]
+            parse_row = l[parse_label]
+            gloss_row = l[gloss_label]
+            has_baseline = baseline_row is not None
+            has_parse = parse_row is not None
+            has_gloss = gloss_row is not None
+            if has_baseline:
+                if has_parse and has_gloss:
+                    # normal case, construct the analysis
+                    for bl_cell, parse_cell, gloss_cell in zip(baseline_row, parse_row, gloss_row, strict=True):
+                        bl_str = get_word_key_from_baseline_word(bl_cell.to_str())
+                        morpheme_strs = parse_cell.strs
+                        parse = Parse(morpheme_strs)
+                        glosses = gloss_cell.strs
+                        analysis = WordAnalysis(parse, glosses)
+                        known_analyses_by_word[bl_str][analysis] += 1
+                elif has_parse or has_gloss:
+                    click.echo(f"line is parsed or glossed but not both:\n{l}")
+                    raise click.Abort()
+                else:
+                    # it has a baseline but neither parse nor gloss, ignore it, it's not done yet
+                    continue
             else:
-                # it has a baseline but neither parse nor gloss, ignore it, it's not done yet
-                continue
-        else:
-            if has_parse or has_gloss:
-                click.echo(f"line has no baseline but has parse and/or gloss:\n{l}")
-                raise click.Abort()
-            else:
-                # it has none of the above, ignore it
-                continue
+                if has_parse or has_gloss:
+                    click.echo(f"line has no baseline but has parse and/or gloss:\n{l}")
+                    raise click.Abort()
+                else:
+                    # it has none of the above, ignore it
+                    continue
+        except:
+            print(f"\nError in line:\n{l.to_string_for_drybones_file()}")
+            raise
     
     return known_analyses_by_word
 

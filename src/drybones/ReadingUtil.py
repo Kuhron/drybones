@@ -32,7 +32,6 @@ def get_raw_lines_from_file(fp, with_newlines=False):
 
 
 def get_lines_from_drybones_file(fp: Path):
-    click.echo(f"getting lines from {fp}")
     line_groups, residues_by_location = get_line_group_strings_from_drybones_file(fp)
     lines = []
     row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
@@ -72,7 +71,8 @@ def get_lines_from_drybones_file(fp: Path):
                     row_length = this_row_length
                 else:
                     if this_row_length != row_length:
-                        click.echo(f"\nError! in file {fp}\nexpected row of length {row_length} but got {this_row_length}:\n{row_text}", err=True)
+                        line_group_display = "\n> " + line_group.replace("\n", "\n> ") + "\n"
+                        click.echo(f"\nError! in file {fp}\nIn line group:\n{line_group_display}\nexpected row of length {row_length} but got {this_row_length}:\n{row_text}", err=True)
                         raise click.Abort()
             else:
                 cells = [Cell([row_text])]
@@ -81,7 +81,7 @@ def get_lines_from_drybones_file(fp: Path):
             rows.append(row)
         line = Line(line_designation, rows)
         lines.append(line)
-    click.echo(f"done getting lines from {fp}\n")
+    click.echo(f"loaded lines from {fp}")
     return lines, residues_by_location
 
 

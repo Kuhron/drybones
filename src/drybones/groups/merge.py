@@ -89,7 +89,7 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
     all_other_rows_mentioned = False
     fp_for_all_other_rows = None
     all_labels_for_all_other_rows = set()
-    from_labels_seen_for_all_other_rows = set()
+    # from_labels_seen_for_all_other_rows = set()
 
     row_labels1 = [x.strip() for x in s1.split(",")]
     row_labels2 = [x.strip() for x in s2.split(",")]
@@ -97,6 +97,7 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
     directives = []
     from_labels_seen1 = set()
     from_labels_seen2 = set()
+    to_labels_to_exclude_from_all_other_labels = set()
     for fp_index, fp, row_labels, all_labels in zip([1, 2], [fp1, fp2], [row_labels1, row_labels2], [all_labels1, all_labels2]):
         from_labels_seen = from_labels_seen1 if fp_index == 1 else from_labels_seen2  # if fp_index == 2
         for row_label in row_labels:
@@ -109,7 +110,8 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
                 to_labels = [row_label]
                 has_mapping = False
             
-            from_labels_seen.add(from_label)
+            if row_label != RowLabel.ALL_OTHER_ROWS_CHAR:
+                from_labels_seen.add(from_label)
             
             # error if residue or * is mapped from or to
             if has_mapping:
@@ -127,20 +129,23 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
                 all_other_rows_mentioned = True
                 fp_for_all_other_rows = fp
                 all_labels_for_all_other_rows = all_labels
-                from_labels_seen_for_all_other_rows = from_labels_seen
+                # from_labels_seen_for_all_other_rows = from_labels_seen
                 to_labels = []  # don't add "* -> *" as a mapping
 
             to_labels = [x.strip() for x in to_labels]
             for to_label in to_labels:
                 tup = (fp, from_label, to_label)
                 directives.append(tup)
+                to_labels_to_exclude_from_all_other_labels.add(to_label)
 
     if all_other_rows_mentioned:
-        all_other_labels_to_use = all_labels_for_all_other_rows - from_labels_seen_for_all_other_rows
+        # '*' refers to all labels found in the file which are not mapped TO
+
+        # all_other_labels_to_use = all_labels_for_all_other_rows - from_labels_seen_for_all_other_rows
+        all_other_labels_to_use = all_labels_for_all_other_rows - to_labels_to_exclude_from_all_other_labels
         for label in all_other_labels_to_use:
             tup = (fp_for_all_other_rows, label, label)
             directives.append(tup)
-            from_labels_seen_for_all_other_rows.add(label)  # do this after we've computed all_other_labels_to_use, so then we can see which labels were actually omitted from a file
 
         # include residue in * if it is not explicitly mentioned
         if not residue_explicitly_mentioned:
@@ -154,9 +159,12 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
     to_labels_seen = set()
     click.echo("'dry merge' directives received:")
     for fp, from_label, to_label in directives:
-        assert to_label not in to_labels_seen, f"duplicate label mapped to: {to_label}"
-        to_labels_seen.add(to_label)
         click.echo(f"{[fp1, fp2].index(fp)+1} : {from_label} -> {to_label}")
+        assert to_label not in to_labels_seen, f"duplicate label mapped to: {to_label}"
+        from_labels_seen = from_labels_seen1 if fp == fp1 else from_labels_seen2 if fp == fp2 else None
+        if from_label != RowLabel.ALL_OTHER_ROWS_CHAR:
+            from_labels_seen.add(from_label)  # do this after we've computed all_other_labels_to_use, so then we can see which labels were actually omitted from a file
+        to_labels_seen.add(to_label)
         if from_label == RowLabel.RESIDUES_PSEUDO_LABEL:
             assert to_label == RowLabel.RESIDUES_PSEUDO_LABEL, "residues cannot be mapped from"
         else:
@@ -164,6 +172,7 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
     click.echo()
 
     for fp, all_labels, from_labels_seen in zip([fp1, fp2], [all_labels1, all_labels2], [from_labels_seen1, from_labels_seen2]):
+        print(from_labels_seen)
         labels_dropped = all_labels - from_labels_seen
         if len(labels_dropped) > 0:
             delim = "\n\t"
