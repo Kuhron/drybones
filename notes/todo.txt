@@ -1,7 +1,10 @@
+Move things from this list to done.txt or wontdo.txt, for later review of what I have and have not done, to help with creating documentation and synthesizing other ideas for features/design.
+
 CURRENT TASK AT HAND (finish or abort cleanly before starting something else!):
 - 
 
 TODO:
+- get notes out of FLEx! will use flexpy for this and then merge them into the relevant .dry files
 - have a line be able to refer to another line in the same or another text, e.g. ref: Kaikai 260, and have the program edit the text files so that the references are all symmetric
 - for the parse and gloss predictions, have it present options to the user like FLEx does when you click on the dropdown arrows for word analysis or lex entry
 - CLI commands for approving an analysis throughout a text or the whole corpus
@@ -32,10 +35,10 @@ TODO:
 - functionality for converting my Hurukui notebook raw data entry format into DryBones-compatible .dry files? or that could be a separate script just specific to me rather than part of DryBones package [2025-04-26: I ended up doing this in a separate script outside of DryBones, because there's a lot of idiosyncrasy to the raw notes format and some stragglers remain that need to be converted by hand as I run across them]
 - detect when a word form is unacceptable, or when a gloss of a given word form is unacceptable even if the word is sometimes acceptable, by looking at the judgment fields found with that form/gloss, e.g. Hurukui "akai" can be validly glossed as "follow-ser" but not as "follow-2sg.imp", while "akaya" is just not a valid form at all (see e.g. [4.198.0-1])
 - have sub-parses/glosses for complex forms, e.g. "hamunge pite" meaning 'God' can be its own cell, but the corpus should also know that this is actually composed of "hamunge" 'man' and "pite" 'big' rather than just homophones or something
+- random exploration mode, walk through utterances in the corpus in random order, want features that let the user find stuff that needs to be re-parsed/analyzed as well as to notice new patterns
 
 - command ideas:
 -- dry publish {text}  # copies the text's file to a specified directory where more permanent versions live (like what I want to do with {Hurukui repo}/Texts/ as of 2025-04-22), can have option for overwrite existing file or however I want to handle that
--- dry parse Kaikai
 -- dry show-unparsed-lines
 -- dry show-status-all
 -- dry search Bl "omore" --ignore-diacritics  # let's ignore case and diacritics by default (maybe configurable), pass -c for case sensitive and -d for diacritic sensitive
@@ -50,6 +53,3 @@ TODO:
 -- dry morpheme search  # search for a morpheme
 -- reorder the rows, and/or enforce a certain row order, on a text file, e.g. `dry reorder N,Baseline,Gloss,Translation`, should warn if it omits any existing lines (don't let it delete omitted ones, just put them sorted at the end or something), should show user the existing line labels beforehand, can also make it do some default order based on order of first appearance in the file
 -- concordance view of something you searched for
-
-- need interactive session for doing the parsing itself, not sure how to convert this to something that a script could do with passing flags, probably best not to worry about this right now and just do the user-facing TTY version of DryBones
--- so `dry text parse TextName` would open such an interactive session where the user can type through to edit morpheme boundaries, add glosses, choose another existing word analysis, etc. like you can in FLEx

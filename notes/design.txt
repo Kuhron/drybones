@@ -19,6 +19,8 @@ DO NOT:
 
 - Do not use text from FLEx exports as raw baselines, because FLEx adds spaces around punctuation marks and other changes. These are minor, but they are still deviations from the ground-truth raw baseline.
 
+- Do not implement any features that are already easily available in text file manipulation tools, such as simple find-and-replace in sed. This would be reinventing the wheel. Rely on users' resourcefulness to use these tools as needed, and focus your DryBones development on features you want that are not already easily found elsewhere.
+
 
 More tentative ideas:
 

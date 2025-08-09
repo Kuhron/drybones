@@ -1,0 +1,5 @@
+Keeping track of things from todo.txt that I did, in lieu of good documentation for now, so I can review/remember what I've implemented.
+
+- command: dry parse Kaikai
+-- need interactive session for doing the parsing itself, not sure how to convert this to something that a script could do with passing flags, probably best not to worry about this right now and just do the user-facing TTY version of DryBones
+-- so `dry text parse TextName` would open such an interactive session where the user can type through to edit morpheme boundaries, add glosses, choose another existing word analysis, etc. like you can in FLEx

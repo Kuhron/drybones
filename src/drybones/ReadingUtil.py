@@ -31,10 +31,12 @@ def get_raw_lines_from_file(fp, with_newlines=False):
         return [l[:-1] for l in lines]
 
 
-def get_lines_from_drybones_file(fp: Path):
+def get_lines_from_drybones_file(fp: Path, enforce_unique_designations=True):
     line_groups, residues_by_location = get_line_group_strings_from_drybones_file(fp)
     lines = []
     row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
+    if enforce_unique_designations:
+        desigs_seen = set()
     for line_group in line_groups:
         line_designation = None
         row_strs = line_group.split("\n")
@@ -79,6 +81,11 @@ def get_lines_from_drybones_file(fp: Path):
             
             row = Row(label, cells)
             rows.append(row)
+        if enforce_unique_designations:
+            if line_designation in desigs_seen:
+                raise Exception(f"duplicate line designation: {line_designation!r}")
+            else:
+                desigs_seen.add(line_designation)
         line = Line(line_designation, rows)
         lines.append(line)
     click.echo(f"loaded lines from {fp}")
