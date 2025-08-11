@@ -1,20 +1,19 @@
 Move things from this list to done.txt or wontdo.txt, for later review of what I have and have not done, to help with creating documentation and synthesizing other ideas for features/design.
 
 CURRENT TASK AT HAND (finish or abort cleanly before starting something else!):
-- 
+- change word analysis globally or throughout text
 
 TODO:
 - get notes out of FLEx! will use flexpy for this and then merge them into the relevant .dry files
 - have a line be able to refer to another line in the same or another text, e.g. ref: Kaikai 260, and have the program edit the text files so that the references are all symmetric
-- for the parse and gloss predictions, have it present options to the user like FLEx does when you click on the dropdown arrows for word analysis or lex entry
 - approving an analysis throughout a text or the whole corpus
 - replacing a partial-word parse/gloss with a new one (e.g. change all -ko-mu 'fut-3sg' to -komu '3sg.fut')
 - search/grep for things, highlight them in colors in the terminal output
-- change word analysis globally or throughout text
 - change which rows are being edited during parsing
 - re-parse a line from scratch
+- re-ask to parse anything with the unknown marker for its analysis (default: parsed as "?", glossed as "?")
 - search lexicon
-- add lexical items that aren't in any text
+- add lexical items that aren't in any text (might be best to just have a lexicon .dry file for this)
 - change which heuristic is used for guessing word analysis: most recently seen in text, most commonly seen in text, most commonly seen overall
 - make config subcommand that can do the following things:
 -- change working directory for FLEx files
@@ -28,12 +27,11 @@ TODO:
 -- later, can import and export texts as other formats e.g. flextext, even something like .tsv or .csv for editing or getting stats in a spreadsheet
 - tags for lines for things like grammar phenomena, e.g. #focus, suggest similar known tags (or even completion as you type) or prompt to make a new one
 - notation with question marks for not-yet-done stuff, a single cell in a row is one: '?', the whole row (or maybe the rest of the row before/after a known cell) is two: '??'
-- notation for items that should be left out of alignment, like tfs, maybe one '*' for a cell that is to be ignored but it's there so the alignment doesn't get messed up (as we will enforce all rows in a line have either only 1 or N cells)
+- notation for items that should be left out of alignment, like tfs, maybe wrap in angle brackets '<>' for a cell that is to be ignored but it's there so the alignment doesn't get messed up (as we will enforce all rows in a line have either only 1 or N cells)
 - allow question mark at end of a cell's value to indicate uncertainty, e.g. glossing a weird use of "ona" as 'bone?' because it usually means "bone" but that makes less sense here, or glossing "minde" as 'together?' because that word's meaning is overall uncertain to the analyst but 'together' is their best guess right now
 - period "." between words in a single gloss-phrase, e.g. "go.down", but colon ":" between gloss-parts that are fused (up to analyst to do this, but useful if you have fusion between gloss-parts and one or more of those is more than one word, e.g. "opa-" 'give.to:1sg.rec')
 - might be a good idea to have row labels explicitly marked with a symbol meaning alignment? it can be configured, but for clarity to user it would be nice to remind them that certain lines like the raw baseline are not aligned (only 1 cell) and others are even though they may look very similar to non-aligned rows
 - functionality for extracting rows containing extra stuff that user put into the .dry file, splitting it out into a separate file like a .csv where the lines with that info get rows in the spreadsheet and others either get blank rows or are excluded depending on user choice, so then I can use the DryBones text format for annotating LVC examples but then split that info out of the main .dry file so it doesn't litter it with too much stuff, can also have functionality for re-importing info like that into the main .dry file
-- functionality for converting my Hurukui notebook raw data entry format into DryBones-compatible .dry files? or that could be a separate script just specific to me rather than part of DryBones package [2025-04-26: I ended up doing this in a separate script outside of DryBones, because there's a lot of idiosyncrasy to the raw notes format and some stragglers remain that need to be converted by hand as I run across them]
 - detect when a word form is unacceptable, or when a gloss of a given word form is unacceptable even if the word is sometimes acceptable, by looking at the judgment fields found with that form/gloss, e.g. Hurukui "akai" can be validly glossed as "follow-ser" but not as "follow-2sg.imp", while "akaya" is just not a valid form at all (see e.g. [4.198.0-1])
 - have sub-parses/glosses for complex forms, e.g. "hamunge pite" meaning 'God' can be its own cell, but the corpus should also know that this is actually composed of "hamunge" 'man' and "pite" 'big' rather than just homophones or something
 - find single cell forms with "_" or whatever char is used for a within-cell space, so that user can make sure they have sub-parses/glosses for their parts (e.g. "opopo_kunie_apono" 'car' should be sub-analyzed as "opopo kuni-e apono" 'thing leg-3sg.poss three')
@@ -41,20 +39,21 @@ TODO:
 - command to check for bad chars/tokens in baselines, e.g. "*", "~", "[", "]", so that user can go clean up lines that fell through the cracks during importing
 - play audio clip! it would be amazing if, given a file for the text and timestamps for the line, you could type `dry play Kom 59' and hear it!
 -- texts should also be allowed to overwrite the text-global filename on certain lines, since who knows if someone will mix together audio files in one .dry text
+- text-level metadata in a line in the text's .dry file (or, another option, in a separate config file in the same dir, need to decide which is better, I like it all being in one place so I like it as part of the text's .dry file so we don't have to worry about linking different files together for this)
 
-- command ideas:
--- dry publish {text}  # copies the text's file to a specified directory where more permanent versions live (like what I want to do with {Hurukui repo}/Texts/ as of 2025-04-22), can have option for overwrite existing file or however I want to handle that
--- dry show-unparsed-lines
--- dry show-status-all
--- dry search Bl "omore" --ignore-diacritics  # let's ignore case and diacritics by default (maybe configurable), pass -c for case sensitive and -d for diacritic sensitive
--- dry search Bl "\bkhai"  # use regex always or have a flag for it? let's use -r/--raw for raw string, regex by default
---- each of the options case sens/insens, diacritic sens/insens, regex/raw should have its own flag, and if the flag matches the current config default then tell user that it's already doing this by default, and what they can do to switch the config setting
--- dry search Gl "fire"
--- dry search Fr "^Don't" --ignore-case
---- maybe instead of having subcommands for word/gloss/translation, I should have field names? since I want this to be pretty extensible for other fields the user might add, like who knows maybe they want a field for speaker name for every line in every text, so should be able to regex search all of those too given the label that the user has put on those lines
--- dry wc Kaikai  # word count, line count
--- dry text-info Kaikai  # some info about the text, such as word count, line count, title, whatever else?
--- dry morpheme show-all  # show all morphemes
--- dry morpheme search  # search for a morpheme
--- reorder the rows, and/or enforce a certain row order, on a text file, e.g. `dry reorder N,Baseline,Gloss,Translation`, should warn if it omits any existing lines (don't let it delete omitted ones, just put them sorted at the end or something), should show user the existing line labels beforehand, can also make it do some default order based on order of first appearance in the file
--- concordance view of something you searched for
+command ideas:
+- dry publish {text}  # copies the text's file to a specified directory where more permanent versions live (like what I want to do with {Hurukui repo}/Texts/ as of 2025-04-22), can have option for overwrite existing file or however I want to handle that
+- dry show-unparsed-lines
+- dry show-status-all
+- dry search Bl "omore" --ignore-diacritics  # let's ignore case and diacritics by default (maybe configurable), pass -c for case sensitive and -d for diacritic sensitive
+- dry search Bl "\bkhai"  # use regex always or have a flag for it? let's use -r/--raw for raw string, regex by default
+-- each of the options case sens/insens, diacritic sens/insens, regex/raw should have its own flag, and if the flag matches the current config default then tell user that it's already doing this by default, and what they can do to switch the config setting
+- dry search Gl "fire"
+- dry search Fr "^Don't" --ignore-case
+-- maybe instead of having subcommands for word/gloss/translation, I should have field names? since I want this to be pretty extensible for other fields the user might add, like who knows maybe they want a field for speaker name for every line in every text, so should be able to regex search all of those too given the label that the user has put on those lines
+- dry wc Kaikai  # word count, line count
+- dry text-info Kaikai  # some info about the text, such as word count, line count, title, whatever else?
+- dry morpheme show-all  # show all morphemes
+- dry morpheme search  # search for a morpheme
+- reorder the rows, and/or enforce a certain row order, on a text file, e.g. `dry reorder N,Baseline,Gloss,Translation`, should warn if it omits any existing lines (don't let it delete omitted ones, just put them sorted at the end or something), should show user the existing line labels beforehand, can also make it do some default order based on order of first appearance in the file
+- concordance view of something you searched for

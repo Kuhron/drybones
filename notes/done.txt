@@ -3,3 +3,5 @@ Keeping track of things from todo.txt that I did, in lieu of good documentation 
 - command: dry parse Kaikai
 -- need interactive session for doing the parsing itself, not sure how to convert this to something that a script could do with passing flags, probably best not to worry about this right now and just do the user-facing TTY version of DryBones
 -- so `dry text parse TextName` would open such an interactive session where the user can type through to edit morpheme boundaries, add glosses, choose another existing word analysis, etc. like you can in FLEx
+- for the parse and gloss predictions, have it present options to the user like FLEx does when you click on the dropdown arrows for word analysis or lex entry
+- functionality for converting my Hurukui notebook raw data entry format into DryBones-compatible .dry files? or that could be a separate script just specific to me rather than part of DryBones package [2025-04-26: I ended up doing this in a separate script outside of DryBones, because there's a lot of idiosyncrasy to the raw notes format and some stragglers remain that need to be converted by hand as I run across them]
