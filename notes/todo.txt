@@ -7,11 +7,12 @@ TODO:
 - get notes out of FLEx! will use flexpy for this and then merge them into the relevant .dry files
 - have a line be able to refer to another line in the same or another text, e.g. ref: Kaikai 260, and have the program edit the text files so that the references are all symmetric
 - for the parse and gloss predictions, have it present options to the user like FLEx does when you click on the dropdown arrows for word analysis or lex entry
-- CLI commands for approving an analysis throughout a text or the whole corpus
-- CLI commands for replacing a partial-word parse/gloss with a new one (e.g. change all -ko-mu 'fut-3sg' to -komu '3sg.fut')
+- approving an analysis throughout a text or the whole corpus
+- replacing a partial-word parse/gloss with a new one (e.g. change all -ko-mu 'fut-3sg' to -komu '3sg.fut')
 - search/grep for things, highlight them in colors in the terminal output
 - change word analysis globally or throughout text
 - change which rows are being edited during parsing
+- re-parse a line from scratch
 - search lexicon
 - add lexical items that aren't in any text
 - change which heuristic is used for guessing word analysis: most recently seen in text, most commonly seen in text, most commonly seen overall
@@ -35,7 +36,11 @@ TODO:
 - functionality for converting my Hurukui notebook raw data entry format into DryBones-compatible .dry files? or that could be a separate script just specific to me rather than part of DryBones package [2025-04-26: I ended up doing this in a separate script outside of DryBones, because there's a lot of idiosyncrasy to the raw notes format and some stragglers remain that need to be converted by hand as I run across them]
 - detect when a word form is unacceptable, or when a gloss of a given word form is unacceptable even if the word is sometimes acceptable, by looking at the judgment fields found with that form/gloss, e.g. Hurukui "akai" can be validly glossed as "follow-ser" but not as "follow-2sg.imp", while "akaya" is just not a valid form at all (see e.g. [4.198.0-1])
 - have sub-parses/glosses for complex forms, e.g. "hamunge pite" meaning 'God' can be its own cell, but the corpus should also know that this is actually composed of "hamunge" 'man' and "pite" 'big' rather than just homophones or something
+- find single cell forms with "_" or whatever char is used for a within-cell space, so that user can make sure they have sub-parses/glosses for their parts (e.g. "opopo_kunie_apono" 'car' should be sub-analyzed as "opopo kuni-e apono" 'thing leg-3sg.poss three')
 - random exploration mode, walk through utterances in the corpus in random order, want features that let the user find stuff that needs to be re-parsed/analyzed as well as to notice new patterns
+- command to check for bad chars/tokens in baselines, e.g. "*", "~", "[", "]", so that user can go clean up lines that fell through the cracks during importing
+- play audio clip! it would be amazing if, given a file for the text and timestamps for the line, you could type `dry play Kom 59' and hear it!
+-- texts should also be allowed to overwrite the text-global filename on certain lines, since who knows if someone will mix together audio files in one .dry text
 
 - command ideas:
 -- dry publish {text}  # copies the text's file to a specified directory where more permanent versions live (like what I want to do with {Hurukui repo}/Texts/ as of 2025-04-22), can have option for overwrite existing file or however I want to handle that

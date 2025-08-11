@@ -35,7 +35,11 @@ for group_i, group_string in enumerate(group_strings):
     
     line_is_blank = True
     for s in other_row_strings:
-        label, rest = s.split(":")
+        try:
+            label, *rests = s.split(":")
+            rest = ":".join(rests)
+        except ValueError:
+            raise ValueError(f"string cannot be split into two parts on colon:\n{s}")
         if line_is_blank and rest.strip() != "":
             line_is_blank = False
     if line_is_blank:
