@@ -29,6 +29,9 @@ class Row:
             return self.label.with_after_label_char() + " " + raw_s
         else:
             return raw_s
+        
+    def get_contents(self):
+        return self.to_str(with_label=False)
 
     def __repr__(self):
         return f"<Row label={self.label.without_after_label_char()} {self.cells}>"

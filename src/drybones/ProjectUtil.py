@@ -104,10 +104,16 @@ def create_project(ctx, project_name:str) -> None:
     click.echo(f"Created new project {project_name!r}.", err=True)
 
 
-def get_closest_parent_drybones_dir(drybones_fp:Path) -> Path | None:
-    assert drybones_fp.is_file(), f"This is not a file: {drybones_fp}"
-    drybones_fp = drybones_fp.absolute()
-    p = drybones_fp.parent
+def get_closest_parent_drybones_dir(fp:Path) -> Path | None:
+    fp = fp.absolute()
+
+    # if it's a file, get the dir it's in
+    # if it's a dir, check itself first
+    if fp.is_file():
+        p = fp.parent
+    else:
+        p = fp
+    
     limit = 10000
     limiter = 0
     while limiter < limit:
