@@ -49,6 +49,7 @@ TODO:
 - text-level metadata in a line in the text's .dry file (or, another option, in a separate config file in the same dir, need to decide which is better, I like it all being in one place so I like it as part of the text's .dry file so we don't have to worry about linking different files together for this)
 - get copy-paste-ready string for an example to include in a document, e.g. `dry example WP1 23` will print the line WP1 23 as baseline/parse/gloss/translation, with line designation and/or timestamp in parentheses after the translation, with tabs between cells; which lines are printed and other things about this can be configuration settings
 - retire line designations forever within a project, will be useful once I relabel examples somehow, so each line can keep a list of its old designations, and any new line designation will be checked against these to ensure we don't accidentally start using an old designation for a new line (so that cross references that need to be relabeled in my written work won't start pointing to the wrong line)
+- consolidate REPLs into the same basic code if it makes sense to do so; existing REPLs: `dry parse {fp}`, `dry search` (implementation in progress)
 
 
 command ideas:

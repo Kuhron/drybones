@@ -91,7 +91,7 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
             for line in lines_to_parse:
                 known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation)
         except KeyboardInterrupt:
-            click.echo("\nQuitting parsing")
+            click.echo("\nQuitting parsing.")
         finally:
             finish_file_editing_operation(new_drybones_fp, residues_by_location, line_designations_in_order, new_lines_by_designation, initial_hash)
 
