@@ -44,10 +44,12 @@ TODO:
 - find single cell forms with "_" or whatever char is used for a within-cell space, so that user can make sure they have sub-parses/glosses for their parts (e.g. "opopo_kunie_apono" 'car' should be sub-analyzed as "opopo kuni-e apono" 'thing leg-3sg.poss three')
 - random exploration mode, walk through utterances in the corpus in random order, want features that let the user find stuff that needs to be re-parsed/analyzed as well as to notice new patterns
 - command to check for bad chars/tokens in baselines, e.g. "*", "~", "[", "]", so that user can go clean up lines that fell through the cracks during importing
-- play audio clip! it would be amazing if, given a file for the text and timestamps for the line, you could type `dry play Kom 59' and hear it!
+- play audio clip! it would be amazing if, given a file for the text and timestamps for the line, you could type `dry play Kom 59` and hear it!
 -- texts should also be allowed to overwrite the text-global filename on certain lines, since who knows if someone will mix together audio files in one .dry text
 - text-level metadata in a line in the text's .dry file (or, another option, in a separate config file in the same dir, need to decide which is better, I like it all being in one place so I like it as part of the text's .dry file so we don't have to worry about linking different files together for this)
 - get copy-paste-ready string for an example to include in a document, e.g. `dry example WP1 23` will print the line WP1 23 as baseline/parse/gloss/translation, with line designation and/or timestamp in parentheses after the translation, with tabs between cells; which lines are printed and other things about this can be configuration settings
+- retire line designations forever within a project, will be useful once I relabel examples somehow, so each line can keep a list of its old designations, and any new line designation will be checked against these to ensure we don't accidentally start using an old designation for a new line (so that cross references that need to be relabeled in my written work won't start pointing to the wrong line)
+
 
 command ideas:
 - dry publish {text}  # copies the text's file to a specified directory where more permanent versions live (like what I want to do with {Hurukui repo}/Texts/ as of 2025-04-22), can have option for overwrite existing file or however I want to handle that

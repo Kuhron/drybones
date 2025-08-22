@@ -52,7 +52,7 @@ from drybones.WordAnalysis import WordAnalysis
 @click.pass_context
 def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     """Parse text contents."""
-    new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation = setup_file_editing_operation(drybones_fp, overwrite)
+    new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation, initial_hash = setup_file_editing_operation(drybones_fp, overwrite)
 
     if line_designation is not None:
         try:
@@ -93,7 +93,7 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
         except KeyboardInterrupt:
             click.echo("\nQuitting parsing")
         finally:
-            finish_file_editing_operation(new_drybones_fp, residues_by_location, line_designations_in_order, new_lines_by_designation)
+            finish_file_editing_operation(new_drybones_fp, residues_by_location, line_designations_in_order, new_lines_by_designation, initial_hash)
 
     # TODO commands to implement when reading user input (no matter what input we are expecting, if we get a command then go do that instead)
     # :b = go back

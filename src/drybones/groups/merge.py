@@ -28,8 +28,13 @@ def merge(ctx, input_fp1, rows1, input_fp2, rows2, output_fp):
     $ dry merge Hevi_Raw.dry "Baseline > BaselineRaw / BaselineToClean, Translation > TranslationRaw / TranslationToClean" Hevi.dry "*" Hevi_combined.dry
     """
 
-    _new_drybones_fp1, lines1, residues_by_location1, line_designations_in_order1, lines_by_designation1 = setup_file_editing_operation(input_fp1, overwrite=False)
-    _new_drybones_fp2, lines2, residues_by_location2, line_designations_in_order2, lines_by_designation2 = setup_file_editing_operation(input_fp2, overwrite=False)
+    assert output_fp not in [input_fp1, input_fp2], "output file must be different from input files"
+    if output_fp.exists():
+        raise FileExistsError(output_fp)
+
+    _new_drybones_fp1, lines1, residues_by_location1, line_designations_in_order1, lines_by_designation1, _initial_hash1 = setup_file_editing_operation(input_fp1, overwrite=False)
+    _new_drybones_fp2, lines2, residues_by_location2, line_designations_in_order2, lines_by_designation2, _initial_hash2 = setup_file_editing_operation(input_fp2, overwrite=False)
+    # we won't use the hashes to guard against overwriting because this operation makes a new file
 
     all_labels1 = get_all_row_labels(lines1)
     all_labels2 = get_all_row_labels(lines2)
@@ -69,7 +74,7 @@ def merge(ctx, input_fp1, rows1, input_fp2, rows2, output_fp):
             residues_by_location_chosen = [residues_by_location1, residues_by_location2][fp_to_index[fp]]
             break
 
-    finish_file_editing_operation(new_drybones_fp=output_fp, residues_by_location=residues_by_location_chosen, line_designations_in_order=line_designations_in_order, new_lines_by_designation=new_lines_by_designation)
+    finish_file_editing_operation(new_drybones_fp=output_fp, residues_by_location=residues_by_location_chosen, line_designations_in_order=line_designations_in_order, new_lines_by_designation=new_lines_by_designation, initial_hash=None)
     click.echo("done merging")
 
 

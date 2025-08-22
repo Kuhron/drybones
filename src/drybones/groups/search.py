@@ -24,7 +24,7 @@ from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL
 @click.argument("text_query")
 def search(row_query: str, text_query: str):
     # TODO test this function on various possibilities for m/, r/, rm/, and plain substring search (no marker)
-    """Search row contents using string/regex match. For `row_label` and `query`, begin the argument with 'm/' for simple full match, 'r/' for regex search, 'rm/' for regex full match, and nothing for simple string search (or s/ to force simple string search in order to escape special characters). While this function is being developed and tested, you will probably get better results from just using `grep` or another well-established regex search function."""
+    """Search row contents using string/regex match. For `row_query` and `text_query`, begin the argument with 'm/' for simple full match, 'r/' for regex search, 'rm/' for regex full match, and nothing for simple string search (or 's/' to force simple string search in order to escape special characters). While this function is being developed and tested, you will probably get better results from just using `grep` or another well-established regex search function."""
 
     string_match_marker = "m/"
     regex_search_marker = "r/"
@@ -108,4 +108,4 @@ def search(row_query: str, text_query: str):
     # TODO print with highlighted 
     # TODO add flag for case-insensitive
     # TODO add custom pseudo-chars user can define, like [DS] to be replaced with regex "(pa|mana|ne|p[ui](n)a)"
-    
+

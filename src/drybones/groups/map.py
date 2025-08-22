@@ -19,7 +19,7 @@ def map(ctx, drybones_fp, mapping, overwrite):
     mapping = parse_mapping_str(mapping)
     print(mapping)
 
-    new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation = setup_file_editing_operation(drybones_fp, overwrite)
+    new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation, initial_hash = setup_file_editing_operation(drybones_fp, overwrite)
     all_label_strs = set()
     for line in lines:
         for row in line.rows:
@@ -44,7 +44,7 @@ def map(ctx, drybones_fp, mapping, overwrite):
         new_line = Line(line.designation, new_rows)
         new_lines_by_designation[new_line.designation] = new_line
 
-    finish_file_editing_operation(new_drybones_fp, residues_by_location, line_designations_in_order, new_lines_by_designation)
+    finish_file_editing_operation(new_drybones_fp, residues_by_location, line_designations_in_order, new_lines_by_designation, initial_hash)
 
 
 def parse_mapping_str(s):
