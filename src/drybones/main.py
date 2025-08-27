@@ -81,6 +81,7 @@ def print_help(ctx=None, subcommand=None):
 
 # here add the subcommand modules to main command group
 
+from drybones.groups.analyze import analyze as analyze_group
 from drybones.groups.config import config as config_group
 from drybones.groups.enter import enter as enter_group
 from drybones.groups.map import map as map_group
@@ -91,6 +92,7 @@ from drybones.groups.read import read as read_group
 from drybones.groups.search import search as search_group
 from drybones.groups.text import text as text_group
 
+main.add_command(analyze_group)
 main.add_command(config_group)
 main.add_command(enter_group)
 main.add_command(map_group)

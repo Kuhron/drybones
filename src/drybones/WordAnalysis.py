@@ -14,8 +14,14 @@ class WordAnalysis:
     def to_str(self):
         if hasattr(self, "str"):
             return self.str
-        s = self.parse.str + " = " + Cell.INTRA_CELL_DELIMITER.join(self.glosses)
+        s = self.get_parse_str() + " = " + self.get_gloss_str()
         return s
+    
+    def get_parse_str(self):
+        return self.parse.str
+    
+    def get_gloss_str(self):
+        return Cell.INTRA_CELL_DELIMITER.join(self.glosses)
     
     def __eq__(self, other):
         if type(other) is not WordAnalysis:

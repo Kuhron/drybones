@@ -11,10 +11,13 @@ from colorama import init as colorama_init
 from colorama import Fore, Back, Style
 colorama_init()
 
+from drybones.AnalysisUtil import get_known_analyses, get_known_parses, get_known_glosses, get_analysis_from_user, get_parse_from_user, get_gloss_from_user, get_word_key_from_baseline_word
 from drybones.Cell import Cell
 from drybones.FileEditingUtil import setup_file_editing_operation, finish_file_editing_operation
 from drybones.Line import Line
+from drybones.OptionsUtil import get_ordered_suggestions, show_ordered_suggestions
 from drybones.Parse import Parse
+from drybones.ParsingUtil import UNKNOWN_GLOSS, MORPHEME_DELIMITER, WORD_DELIMITER
 from drybones.ProjectUtil import get_corpus_dir
 from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir
 from drybones.Row import Row
@@ -101,9 +104,6 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     # :q = quit
 
 
-UNKNOWN_GLOSS = "?"
-MORPHEME_DELIMITER = Cell.INTRA_CELL_DELIMITER
-WORD_DELIMITER = Row.INTRA_ROW_DELIMITER
 COMMAND_CHAR = ":"
 
 RED = lambda s: Fore.RED + s + Style.RESET_ALL
@@ -189,202 +189,6 @@ def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_
     new_lines_by_designation[new_line.designation] = new_line
     
     return known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation
-
-
-def remove_punctuation(word_str):
-    # for purposes of identifying if we have a parse of this word
-    res = word_str
-    try:
-        while any(res.endswith(x) for x in [".", ",", "?", "!", ";", ")", "\""]):
-            res = res[:-1]
-        while any(res.startswith(x) for x in ["(", "\""]):
-            res = res[1:]
-    except IndexError:
-        click.echo(f"removing punctuation from {word_str!r} resulted in blank string", err=True)
-        raise click.Abort()
-    return res
-
-
-def get_word_key_from_baseline_word(word):
-    return remove_punctuation(word.lower())
-
-
-def get_known_analyses(lines):
-    known_analyses_by_word = defaultdict(Counter)
-    baseline_label = DEFAULT_BASELINE_LABEL
-    parse_label = DEFAULT_PARSE_LABEL
-    gloss_label = DEFAULT_GLOSS_LABEL
-    for l in lines:
-        try:
-            baseline_row = l[baseline_label]
-            parse_row = l[parse_label]
-            gloss_row = l[gloss_label]
-            has_baseline = baseline_row is not None
-            has_parse = parse_row is not None
-            has_gloss = gloss_row is not None
-            if has_baseline:
-                if has_parse and has_gloss:
-                    # normal case, construct the analysis
-                    for bl_cell, parse_cell, gloss_cell in zip(baseline_row, parse_row, gloss_row, strict=True):
-                        bl_str = get_word_key_from_baseline_word(bl_cell.to_str())
-                        morpheme_strs = parse_cell.strs
-                        parse = Parse(morpheme_strs)
-                        glosses = gloss_cell.strs
-                        analysis = WordAnalysis(parse, glosses)
-                        known_analyses_by_word[bl_str][analysis] += 1
-                elif has_parse or has_gloss:
-                    click.echo(f"line is parsed or glossed but not both:\n{l}")
-                    raise click.Abort()
-                else:
-                    # it has a baseline but neither parse nor gloss, ignore it, it's not done yet
-                    continue
-            else:
-                if has_parse or has_gloss:
-                    click.echo(f"line has no baseline but has parse and/or gloss:\n{l}")
-                    raise click.Abort()
-                else:
-                    # it has none of the above, ignore it
-                    continue
-        except:
-            print(f"\nError in line:\n{l.to_string_for_drybones_file()}")
-            raise
-    
-    return known_analyses_by_word
-
-
-def get_known_parses(known_analyses_by_word):
-    known_parses_by_word = defaultdict(Counter)
-
-    for word, analysis_counter in known_analyses_by_word.items():
-        for analysis, count in analysis_counter.items():
-            parse = analysis.parse
-            known_parses_by_word[word][parse] += count
-    
-    return known_parses_by_word
-
-
-def get_known_glosses(known_analyses_by_word):
-    known_glosses_by_morpheme = defaultdict(Counter)
-
-    for word, analysis_counter in known_analyses_by_word.items():
-        for analysis, count in analysis_counter.items():
-            parse = analysis.parse
-            morpheme_strs = parse.morpheme_strs
-            glosses = analysis.glosses
-            for morpheme_str, gloss in zip(morpheme_strs, glosses, strict=True):
-                known_glosses_by_morpheme[morpheme_str][gloss] += count
-
-    return known_glosses_by_morpheme
-
-
-def get_analysis_from_user(word, known_analyses_by_word) -> WordAnalysis:
-    click.echo(f"word: {word}")
-    n_analyses_to_show = 15
-    ordered_suggested_analyses = get_ordered_suggestions(key=word, known_dict=known_analyses_by_word, n=n_analyses_to_show)
-    show_ordered_suggestions(ordered_suggested_analyses, n=n_analyses_to_show, display_func=lambda a: a.str,
-                             string_if_no_options="no analyses known for this word",
-                             string_if_options="top analysis candidates:",
-    )
-    while True:
-        inp = input("choose existing analysis, or press enter to create a new one: ")
-        if inp == "":
-            analysis = None
-            break
-        try:
-            i = int(inp)
-            analysis = ordered_suggested_analyses[i-1]
-            break
-        except ValueError:
-            click.echo("invalid input")
-        except IndexError:
-            click.echo("that number is out of range")
-    click.echo()
-    return analysis
-
-
-def get_parse_from_user(word, known_parses_by_word) -> Parse:
-    click.echo(f"word: {word}")
-    n_parses_to_show = 15
-    ordered_suggested_parses = get_ordered_suggestions(key=word, known_dict=known_parses_by_word, n=n_parses_to_show)
-    show_ordered_suggestions(ordered_suggested_parses, n=n_parses_to_show, display_func=lambda p: p.str, 
-                             string_if_no_options="no parses known for this word",
-                             string_if_options="top parse candidates:",
-    )
-    while True:
-        inp = input("morphemes: ")
-        try:
-            i = int(inp)
-            parse = ordered_suggested_parses[i-1]  # because they are shown to user starting from 1
-            break
-        except ValueError:
-            parse_str = inp if inp != "" else word
-
-            if Row.INTRA_ROW_DELIMITER in parse_str:
-                click.echo(f"the character {Row.INTRA_ROW_DELIMITER!r} is not allowed in the parse of an individual word")
-                return get_parse_from_user(word, known_parses_by_word)
-    
-            morpheme_strs = parse_str.split(MORPHEME_DELIMITER)
-            parse = Parse(morpheme_strs)
-            break
-        except IndexError:
-            click.echo("that number is out of range")
-    click.echo()
-    return parse
-
-
-def get_gloss_from_user(morpheme, known_glosses_by_morpheme):
-    click.echo(f"morpheme: {morpheme}")
-    n_glosses_to_show = 15
-    ordered_suggested_glosses = get_ordered_suggestions(key=morpheme, known_dict=known_glosses_by_morpheme, n=n_glosses_to_show)
-    show_ordered_suggestions(ordered_suggested_glosses, n=n_glosses_to_show,
-                             string_if_no_options="no glosses known for this morpheme",
-                             string_if_options="top gloss candidates:",
-    )
-    gloss = input("gloss: ")
-    try:
-        i = int(gloss)
-        gloss = ordered_suggested_glosses[i-1]  # because they are shown to user starting from 1
-    except ValueError:
-        pass  # use whatever user gave for the gloss
-    except IndexError:
-        click.echo("that number is out of range")
-        return get_gloss_from_user(morpheme, known_glosses_by_morpheme)
-    click.echo()
-
-    if Cell.INTRA_CELL_DELIMITER in gloss:
-        click.echo(f"the character {Cell.INTRA_CELL_DELIMITER!r} is not allowed in the gloss of an individual morpheme")
-        return get_gloss_from_user(morpheme, known_glosses_by_morpheme)
-    elif Row.INTRA_ROW_DELIMITER in gloss:
-        click.echo(f"the character {Row.INTRA_ROW_DELIMITER!r} is not allowed in the gloss of an individual morpheme")
-        return get_gloss_from_user(morpheme, known_glosses_by_morpheme)
-
-    if gloss == "":
-        gloss = UNKNOWN_GLOSS
-    return gloss
-
-
-def get_ordered_suggestions(key, known_dict, n: int=None):
-    possibles = known_dict[key]
-    lst = [k for k,v in sorted(possibles.items(), key=lambda kv: kv[-1], reverse=True)]
-    if n is not None:
-        return lst[:n]
-    else:
-        return lst
-
-
-def show_ordered_suggestions(ordered_suggestions, n=5, display_func=None, string_if_no_options=None, string_if_options=None) -> None:
-    if display_func is None:
-        display_func = lambda x: x
-    if string_if_no_options is None:
-        string_if_no_options = "no suggestions found"
-    if len(ordered_suggestions) == 0:
-        click.echo(string_if_no_options)
-    else:
-        click.echo(string_if_options)
-        n = min(n, len(ordered_suggestions))
-        for i in range(n):
-            s = display_func(ordered_suggestions[i])
-            click.echo(f"{i+1}. {s}")
 
 
 def print_baseline(designation, baseline_text, production_str, judgment_str, words=None, word_index_to_highlight=None, morphemes=None, morpheme_index_to_highlight=None) -> None:
