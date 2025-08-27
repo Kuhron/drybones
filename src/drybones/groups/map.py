@@ -11,8 +11,7 @@ from drybones.RowLabel import RowLabel
 @click.command
 @click.argument("drybones_fp", required=True, type=Path)
 @click.option("--mapping", "-m", required=True, type=str)
-# @click.option("--shuffle", "-s", type=bool, default=False, help="Shuffle the lines during parsing.")
-@click.option("--overwrite", "-w", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
+@click.option("--overwrite", "-w", type=bool, is_flag=True, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
 def map(ctx, drybones_fp, mapping, overwrite):
     """Relabel rows."""

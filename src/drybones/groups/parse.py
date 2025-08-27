@@ -47,8 +47,8 @@ from drybones.WordAnalysis import WordAnalysis
 @click.command
 @click.argument("drybones_fp", required=True, type=Path)
 @click.argument("line_designation", required=False, type=str)
-@click.option("--shuffle", "-s", type=bool, default=False, help="Shuffle the lines during parsing.")
-@click.option("--overwrite", "-w", type=bool, default=False, help="Overwrite the input file. If false, a separate file will be created.")
+@click.option("--shuffle", "-s", type=bool, is_flag=True, help="Shuffle the lines during parsing.")
+@click.option("--overwrite", "-w", type=bool, is_flag=True, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
 def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     """Parse text contents."""

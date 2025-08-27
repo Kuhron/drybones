@@ -2,7 +2,7 @@ Move things from this list to done.txt or wontdo.txt, for later review of what I
 
 CURRENT TASK AT HAND (finish or abort cleanly before starting something else!):
 - change word analysis globally or throughout text
--- current subtask: show analyses for a wordform, e.g. `dry search Baseline "eka"` will list them like it would during parsing
+-- current subtask: show analyses for a wordform, e.g. `dry analyze Baseline "eka"` will list them like it would during parsing
 --- should I allow this to be shortened to `dry form "eka"`? maybe but will need config about which row is the form, so maybe omit this for now
 -- other subtasks:
 --- break out of parsing loop when user wants to do this; upon being shown possible analyses of a form, user can do something like `:reassign 2>3`, `:reassign 1,2>3`, etc.
@@ -50,9 +50,12 @@ TODO:
 - get copy-paste-ready string for an example to include in a document, e.g. `dry example WP1 23` will print the line WP1 23 as baseline/parse/gloss/translation, with line designation and/or timestamp in parentheses after the translation, with tabs between cells; which lines are printed and other things about this can be configuration settings
 - retire line designations forever within a project, will be useful once I relabel examples somehow, so each line can keep a list of its old designations, and any new line designation will be checked against these to ensure we don't accidentally start using an old designation for a new line (so that cross references that need to be relabeled in my written work won't start pointing to the wrong line)
 - consolidate REPLs into the same basic code if it makes sense to do so; existing REPLs: `dry parse {fp}`, `dry search` (implementation in progress)
+- reorder the rows, and/or enforce a certain row order, on a text file, e.g. `dry reorder N,Baseline,Gloss,Translation`, should warn if it omits any existing lines (don't let it delete omitted ones, just put them sorted at the end or something), should show user the existing line labels beforehand, can also make it do some default order based on order of first appearance in the file
+- concordance view of something you searched for
+- corpus stats (how many words, how many texts)
 
 
-command ideas:
+command name/syntax ideas:
 - dry publish {text}  # copies the text's file to a specified directory where more permanent versions live (like what I want to do with {Hurukui repo}/Texts/ as of 2025-04-22), can have option for overwrite existing file or however I want to handle that
 - dry show-unparsed-lines
 - dry show-status-all
@@ -66,5 +69,3 @@ command ideas:
 - dry text-info Kaikai  # some info about the text, such as word count, line count, title, whatever else?
 - dry morpheme show-all  # show all morphemes
 - dry morpheme search  # search for a morpheme
-- reorder the rows, and/or enforce a certain row order, on a text file, e.g. `dry reorder N,Baseline,Gloss,Translation`, should warn if it omits any existing lines (don't let it delete omitted ones, just put them sorted at the end or something), should show user the existing line labels beforehand, can also make it do some default order based on order of first appearance in the file
-- concordance view of something you searched for

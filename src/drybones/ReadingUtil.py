@@ -88,7 +88,7 @@ def get_lines_from_drybones_file(fp: Path, enforce_unique_designations=True):
                 desigs_seen.add(line_designation)
         line = Line(line_designation, rows)
         lines.append(line)
-    click.echo(f"loaded lines from {fp}")
+    # click.echo(f"loaded lines from {fp}")
     return lines, residues_by_location
 
 
@@ -117,9 +117,11 @@ def get_line_group_strings_from_drybones_file(fp: Path):
 
 
 def get_lines_from_all_drybones_files_in_dir(d: Path, extension=DRYBONES_FILE_EXTENSION):
-    fps = d.glob("**/*" + extension)
+    fps = list(d.glob("**/*" + extension))
     lines = []
-    for fp in fps:
+    for i, fp in enumerate(fps):
         these_lines, residues = get_lines_from_drybones_file(fp)
         lines += these_lines
+        click.echo(f"loading lines from file {i+1}/{len(fps)}\r", nl=False)
+    click.echo()
     return lines

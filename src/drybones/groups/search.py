@@ -7,6 +7,7 @@ import yaml
 import shutil
 import re
 import shlex
+import readline  # for enabling arrow keys during input()
 from pathlib import Path
 
 # terminal color printing
@@ -14,15 +15,22 @@ from colorama import init as colorama_init
 from colorama import Fore, Back, Style
 colorama_init()
 
+from drybones.InvalidInput import InvalidInput
 from drybones.ProjectUtil import get_corpus_dir
 from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL
+from drybones.SearchResult import SearchResult
 
 
 STRING_MATCH_MARKER = "m/"
 REGEX_SEARCH_MARKER = "r/"
 REGEX_MATCH_MARKER = "rm/"
 EXPLICIT_STRING_SEARCH_MARKER = "s/"
+
+REPEAT_CHAR, REPEAT_CHAR_INDEF, REPEAT_CHAR_PLURAL = ";", "a semicolon", "semicolons"
+# REPEAT_CHAR, REPEAT_CHAR_INDEF, REPEAT_CHAR_PLURAL = ":", "a colon", "colons"
+
+PROMPT_STR = "> "
 
 
 # @click.group(no_args_is_help=True)
@@ -37,61 +45,63 @@ def search(row_query: str, text_query: str, interactive: bool):
     corpus_dir = get_corpus_dir(Path.cwd())
     print(f"{corpus_dir = }")
     lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir)
+    click.echo()  # to add space between the "loaded lines from ..." and the input prompt
 
     qsum = (row_query is not None) + (text_query is not None)
     if qsum == 0:
         # open an interactive session, whether the user specified -i or not
         run_interactive_search_session(lines_from_all_files)
     elif qsum == 2:
-        run_search_query(row_query, text_query, lines_from_all_files)
+        # do a search query immediately based on the args passed
+        if interactive:
+            # do the initial query and then continue as an interactive session
+            run_interactive_search_session(lines_from_all_files, initial_row_query=row_query, initial_text_query=text_query)
+        else:
+            # do this query only, do not continue into interactive session
+            search_results = run_search_query(row_query, text_query, lines_from_all_files)
+            process_search_results(search_results)
     else:
-        raise Exception("`row_query` and `text_query` should either both be passed or both be omitted")
+        click.echo("`row_query` and `text_query` should either both be passed or both be omitted", err=True)
+        raise click.Abort()
 
     # TODO print with highlighted 
     # TODO add flag for case-insensitive
     # TODO add custom pseudo-chars user can define, like [DS] to be replaced with regex "(pa|mana|ne|p[ui](n)a)"
 
 
-def run_interactive_search_session(lines_from_all_files):
-    repeat_char, repeat_char_indef, repeat_char_plural = ";", "a semicolon", "semicolons"
-    # repeat_char, repeat_char_indef, repeat_char_plural = ":", "a colon", "colons"
-
+def run_interactive_search_session(lines_from_all_files, initial_row_query=None, initial_text_query=None):
     last_row_query = None
     last_text_query = None
 
+    if (initial_row_query is not None) or (initial_text_query is not None):
+        if not ((initial_row_query is not None) and (initial_text_query is not None)):
+            click.echo("`row_query` and `text_query` should either both be passed or both be omitted", err=True)
+            raise click.Abort()
+        run_initial = True
+    else:
+        run_initial = False
+
     while True:
-        try:
-            click.echo(f"Type your row and text queries, separated by space. Use quotation marks around either of these if it contains spaces. To repeat the last row or text query, type {repeat_char_indef} ({repeat_char}) as the query. To repeat the last search, type {repeat_char_plural} ({repeat_char*2}).")
-            raw = input("> ")
-            if raw == repeat_char*2:
-                if last_row_query is None and last_text_query is None:
-                    click.echo("Last row and text query must both be defined, but neither is.")
+        if run_initial:
+            row_query = initial_row_query
+            text_query = initial_text_query
+            run_initial = False
+        else:
+            try:
+                query_from_user = get_query_from_user(last_row_query, last_text_query)
+                if query_from_user is InvalidInput:
                     continue
-                elif last_row_query is None:
-                    click.echo("Last row and text query must both be defined, but the row query is not.")
-                    continue
-                elif last_text_query is None:
-                    click.echo("Last row and text query must both be defined, but the text query is not.")
-                    continue
-            else:
-                try:
-                    row_query, text_query = shlex.split(raw)  # preserve quoted substrings that have space in them
-                except ValueError:
-                    click.echo("invalid input\n")
-                    continue
-                if row_query == repeat_char:
-                    row_query = last_row_query
                 else:
-                    last_row_query = row_query
-                if text_query == repeat_char:
-                    text_query = last_text_query
-                else:
-                    last_text_query = text_query
-            run_search_query(row_query, text_query, lines_from_all_files)
-            click.echo()
-        except KeyboardInterrupt:
-            click.echo("\nQuitting search session.")
-            return
+                    row_query, text_query = query_from_user
+            except KeyboardInterrupt:
+                click.echo("\nQuitting search session.")
+                return
+        
+        search_results = run_search_query(row_query, text_query, lines_from_all_files)
+        last_row_query = row_query
+        last_text_query = text_query
+        process_search_results(search_results)
+        click.echo()
 
 
 def run_search_query(row_query, text_query, lines_from_all_files):
@@ -109,22 +119,65 @@ def run_search_query(row_query, text_query, lines_from_all_files):
     for line in lines_from_all_files:
         for row in line.rows:
             if row_match_func(row.label.string):
-                tup = (row, line.designation)  # want reference back to the parent line so user can see where it is
+                tup = (row, line)  # want reference back to the parent line so user can see where it is
                 rows_to_search.append(tup)
 
-    contents_matched = []
-    for row, line_designation in rows_to_search:
+    search_results = []
+    for row, line in rows_to_search:
         contents = row.get_contents()
         if text_match_func(contents):
-            tup = (contents, row.label.string, line_designation)
-            contents_matched.append(tup)
+            sr = SearchResult(string=contents, row=row, line=line)
+            search_results.append(sr)
 
-    if len(contents_matched) > 0:
+    return search_results
+
+
+def print_search_results(search_results):
+    if len(search_results) > 0:
         click.echo("\nSearch results:\n")
-        for s, row_label_str, line_designation in contents_matched:
-            click.echo(f"{Fore.YELLOW}{DEFAULT_LINE_DESIGNATION_LABEL}: {line_designation} / {row_label_str}:{Style.RESET_ALL} {s}")
+        for i, sr in enumerate(search_results):
+            click.echo(f"{i+1}) {Fore.YELLOW}{DEFAULT_LINE_DESIGNATION_LABEL}: {sr.line.designation} / {sr.row.label.string}:{Style.RESET_ALL} {sr.string}")
+        click.echo()
     else:
         click.echo("\nNo results found.")
+
+
+def get_query_from_user(last_row_query, last_text_query):
+    click.echo(f"Type your row and text queries, separated by space. Use quotation marks around either of these if it contains spaces. To repeat the last row or text query, type {REPEAT_CHAR_INDEF} ({REPEAT_CHAR}) as the query. To repeat the last search, type {REPEAT_CHAR_PLURAL} ({REPEAT_CHAR*2}).")
+    raw = prompt("query")
+    if raw.replace(" ", "") == REPEAT_CHAR*2:  # because shlex will split on arbitrary number of spaces, and we want "; ;" to behave the same as ";;" (where ';' is the REPEAT_CHAR)
+        if last_row_query is None and last_text_query is None:
+            click.echo("Last row and text query must both be defined, but neither is.\n")
+            return InvalidInput
+        elif last_row_query is None:
+            click.echo("Last row and text query must both be defined, but the row query is not.\n")
+            return InvalidInput
+        elif last_text_query is None:
+            click.echo("Last row and text query must both be defined, but the text query is not.\n")
+            return InvalidInput
+        else:
+            return last_row_query, last_text_query
+    else:
+        try:
+            row_query, text_query = shlex.split(raw)  # preserve quoted substrings that have space in them
+        except ValueError:
+            click.echo("invalid input\n")
+            return InvalidInput
+        
+        if row_query == REPEAT_CHAR:
+            if last_row_query is None:
+                click.echo("Last row and text query must both be defined, but the row query is not.\n")
+                return InvalidInput
+            else:
+                row_query = last_row_query
+        if text_query == REPEAT_CHAR:
+            if last_text_query is None:
+                click.echo("Last row and text query must both be defined, but the text query is not.\n")
+                return InvalidInput
+            else:
+                text_query = last_text_query
+    
+    return row_query, text_query
 
 
 def strip_marker(original_s, enforce_only_one_marker=False):
@@ -171,4 +224,37 @@ def regex_pattern_matches_input(pattern, test_string, full_match: bool):
 def string_pattern_matches_input(pattern, test_string, full_match: bool):
     s_func = (lambda patrn, test_str: patrn == test_str) if full_match else (lambda patrn, test_str: patrn in test_str)
     return s_func(pattern, test_string)
+
+
+def process_search_results(search_results):
+    print_search_results(search_results)
+    while True:
+        click.echo("Select the number of the result you want to investigate, or to exit the current search you can enter nothing, 'q', or 'quit'.")
+        raw = prompt("choice")
+        if raw in ["", "q", "quit"]:
+            return
+        else:
+            try:
+                n = int(raw)
+            except ValueError:
+                click.echo("invalid number\n")
+                continue
+        
+        if 0 <= n-1 < len(search_results):
+            chosen_search_result = search_results[n-1]
+            process_single_search_result(chosen_search_result)
+        else:
+            click.echo(f"Number must be between 1 and the number of search results ({len(search_results)}), inclusive.\n")
+
+
+def process_single_search_result(sr):
+    # later can do some stuff here beyond just printing the search result
+    # like allowing user to input commands to redo a word analysis, reparse the line, search for some other item found in this line, etc.
+
+    click.echo(sr.to_detailed_display_str())
+    click.echo()
+
+
+def prompt(s):
+    return input(f"{s} {PROMPT_STR}")
 
