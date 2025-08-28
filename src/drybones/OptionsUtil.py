@@ -1,5 +1,7 @@
 # helper functions about presenting lists of options to the user and getting user selections from those lists
 
+import click
+
 
 def get_ordered_suggestions(key, known_dict, n: int=None):
     possibles = known_dict[key]
