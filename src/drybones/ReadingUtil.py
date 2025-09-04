@@ -2,6 +2,7 @@
 # but NOT for actually doing any displaying
 
 import click
+from collections import defaultdict
 from pathlib import Path
 
 from drybones.Cell import Cell
@@ -9,14 +10,16 @@ from drybones.Constants import DRYBONES_FILE_EXTENSION
 from drybones.Line import Line
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING
+from drybones.Text import Text
 
 
-def get_drybones_file_from_text_name(text_name):
-    return f"{text_name}.dry"
+def get_drybones_file_from_text_name(text_name, corpus_dir):
+    name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=False)
+    return name_to_text[text_name].source_fp
 
 
-def get_lines_from_text_name(text_name):
-    fp = get_drybones_file_from_text_name(text_name)
+def get_lines_from_text_name(text_name: str, corpus_dir: Path):
+    fp = get_drybones_file_from_text_name(text_name, corpus_dir)
     return get_lines_from_drybones_file(fp)
 
 
@@ -116,12 +119,60 @@ def get_line_group_strings_from_drybones_file(fp: Path):
     return groups, residues_by_location
 
 
-def get_lines_from_all_drybones_files_in_dir(d: Path, extension=DRYBONES_FILE_EXTENSION):
-    fps = list(d.glob("**/*" + extension))
+def get_text_from_file(fp: Path, with_contents: bool=True):
+    name = fp.stem  # for now just take name from the filename, but later want it to match the line designations and/or be in some metadata in the text's .dry file itself
+    if with_contents:
+        lines, residues = get_lines_from_drybones_file(fp)
+    else:
+        lines, residues = [], []
+    t = Text(name, lines, residues, source_fp=fp)
+    return t
+
+
+def get_text_names_in_dir(d: Path):
+    name_to_text = get_all_texts_in_dir(d, with_contents=False)
+    return list(name_to_text.keys())
+
+
+def get_all_texts_in_dir(d: Path, with_contents: bool=True):
+    fps = get_all_drybones_files_in_dir(d)
+    name_to_text = {}
+    name_to_fps = defaultdict(list)
+    has_duplicates = False
+    for fp in fps:
+        text = get_text_from_file(fp, with_contents=with_contents)
+        name = text.name
+        name_to_fps[name].append(fp)
+        if len(name_to_fps[name]) > 1:
+            has_duplicates = True
+        
+        # if we have any duplicates already, we no longer care about returning the dict of name to text
+        # but we will still check for more duplicates so we can list all of them at once to the user
+        if not has_duplicates:
+            # add this text to the dict that we will return
+            name_to_text[name] = text
+
+    if has_duplicates:
+        click.echo("\nDuplicate text names found:")
+        for name, these_fps in sorted(name_to_fps.items()):
+            if len(these_fps) > 1:
+                click.echo(f"\tText name {name!r}:")
+                for fp in sorted(these_fps):
+                    click.echo(f"\t\t{fp}")
+        raise click.Abort()
+    
+    return name_to_text
+
+
+def get_all_drybones_files_in_dir(d: Path):
+    return list(d.glob("**/*" + DRYBONES_FILE_EXTENSION))
+
+
+def get_lines_from_all_drybones_files_in_dir(d: Path):
+    texts = get_all_texts_in_dir(d)
     lines = []
-    for i, fp in enumerate(fps):
-        these_lines, residues = get_lines_from_drybones_file(fp)
-        lines += these_lines
-        click.echo(f"loading lines from file {i+1}/{len(fps)}\r", nl=False)
+    for i, t in enumerate(texts):
+        lines += t.lines
+        click.echo(f"loading lines from file {i+1}/{len(texts)}\r", nl=False)
     click.echo()
     return lines

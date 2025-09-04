@@ -1,11 +1,11 @@
 # things related to showing what's in a text without editing anything
 
 import click
+from pathlib import Path
 
-import drybones.ReadingUtil as ru
-import drybones.PrintingUtil as pu
-import drybones.ProjectUtil as ju
-import drybones.StringValidation as sv
+from drybones.ReadingUtil import get_text_names_in_dir, get_lines_from_text_name
+from drybones.PrintingUtil import print_lines_in_pager, print_lines_in_terminal
+from drybones.StringValidation import validate_string
 from drybones.Validation import Validated, Invalidated
 
 
@@ -15,13 +15,14 @@ from drybones.Validation import Validated, Invalidated
 @click.pass_context
 def read(ctx, text_name, line_number):
     """View text contents without editing."""
-    text_name_validation = validate_text_name(text_name)
+    corpus_dir = Path.cwd()
+    text_name_validation = validate_text_name(text_name, corpus_dir)
     if text_name_validation is None or type(text_name_validation) is Invalidated:
         return
     text_name = text_name_validation.match
     click.echo(f"Reading text {text_name}", err=True)
 
-    lines = ru.get_lines_from_text_name(text_name)  # should make a cache so it's not re-parsing the whole text file every time user runs a command
+    lines = get_lines_from_text_name(text_name, corpus_dir)  # should make a cache so it's not re-parsing the whole text file every time user runs a command
 
     line_numbers_to_read = None
     if line_number is None:
@@ -36,14 +37,14 @@ def read(ctx, text_name, line_number):
         lines = [lines[i-1] for i in line_numbers_to_read]
     labels_of_aligned_rows = ctx.obj.labels_of_aligned_rows
     if len(lines) > 1:
-        pu.print_lines_in_pager(lines, labels_of_aligned_rows)
+        print_lines_in_pager(lines, labels_of_aligned_rows)
     else:
-        pu.print_lines_in_terminal(lines, labels_of_aligned_rows)
+        print_lines_in_terminal(lines, labels_of_aligned_rows)
 
 
-def validate_text_name(text_name):
-    text_name_options = ju.get_text_names()
-    validation = sv.validate_string(text_name, text_name_options)
+def validate_text_name(text_name: str, corpus_dir: Path):
+    text_name_options = get_text_names_in_dir(corpus_dir)
+    validation = validate_string(text_name, text_name_options)
     if validation is None:
         return None
     elif type(validation) is Invalidated:
