@@ -7,7 +7,6 @@ import yaml
 import shutil
 import re
 import shlex
-import readline  # for enabling arrow keys during input()
 from pathlib import Path
 
 # terminal color printing
@@ -15,6 +14,7 @@ from colorama import init as colorama_init
 from colorama import Fore, Back, Style
 colorama_init()
 
+from drybones.DiacriticsUtil import get_char_to_alternatives_dict, translate_diacritic_alternatives_in_string
 from drybones.InvalidInput import InvalidInput
 from drybones.ProjectUtil import get_corpus_dir
 from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir
@@ -45,20 +45,21 @@ def search(row_query: str, text_query: str, interactive: bool):
     corpus_dir = get_corpus_dir(Path.cwd())
     print(f"{corpus_dir = }")
     lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir)
+    diacritic_dict = get_char_to_alternatives_dict()
     click.echo()  # to add space between the "loaded lines from ..." and the input prompt
 
     qsum = (row_query is not None) + (text_query is not None)
     if qsum == 0:
         # open an interactive session, whether the user specified -i or not
-        run_interactive_search_session(lines_from_all_files)
+        run_interactive_search_session(lines_from_all_files, diacritic_dict)
     elif qsum == 2:
         # do a search query immediately based on the args passed
         if interactive:
             # do the initial query and then continue as an interactive session
-            run_interactive_search_session(lines_from_all_files, initial_row_query=row_query, initial_text_query=text_query)
+            run_interactive_search_session(lines_from_all_files, diacritic_dict, initial_row_query=row_query, initial_text_query=text_query)
         else:
             # do this query only, do not continue into interactive session
-            search_results = run_search_query(row_query, text_query, lines_from_all_files)
+            search_results = run_search_query(row_query, text_query, lines_from_all_files, diacritic_dict)
             process_search_results(search_results)
     else:
         click.echo("`row_query` and `text_query` should either both be passed or both be omitted", err=True)
@@ -69,7 +70,7 @@ def search(row_query: str, text_query: str, interactive: bool):
     # TODO add custom pseudo-chars user can define, like [DS] to be replaced with regex "(pa|mana|ne|p[ui](n)a)"
 
 
-def run_interactive_search_session(lines_from_all_files, initial_row_query=None, initial_text_query=None):
+def run_interactive_search_session(lines_from_all_files, diacritic_dict, initial_row_query=None, initial_text_query=None):
     last_row_query = None
     last_text_query = None
 
@@ -97,14 +98,14 @@ def run_interactive_search_session(lines_from_all_files, initial_row_query=None,
                 click.echo("\nQuitting search session.")
                 return
         
-        search_results = run_search_query(row_query, text_query, lines_from_all_files)
+        search_results = run_search_query(row_query, text_query, lines_from_all_files, diacritic_dict)
         last_row_query = row_query
         last_text_query = text_query
         process_search_results(search_results)
         click.echo()
 
 
-def run_search_query(row_query, text_query, lines_from_all_files):
+def run_search_query(row_query, text_query, lines_from_all_files, diacritic_dict):
     row_query_is_regex, row_query_is_match, row_query_stripped = is_regex_is_match(row_query)
     text_query_is_regex, text_query_is_match, text_query_stripped = is_regex_is_match(text_query)
 
@@ -112,8 +113,11 @@ def run_search_query(row_query, text_query, lines_from_all_files):
 
     # later possible optimization: only get the rows that match in the first place, don't get all rows from all files
 
-    row_match_func = lambda test_str: regex_pattern_matches_input(row_query_stripped, test_str, full_match=row_query_is_match) if row_query_is_regex else string_pattern_matches_input(row_query_stripped, test_str, full_match=row_query_is_match)
-    text_match_func = lambda test_str: regex_pattern_matches_input(text_query_stripped, test_str, full_match=text_query_is_match) if text_query_is_regex else string_pattern_matches_input(text_query_stripped, test_str, full_match=text_query_is_match)
+    # TODO add option for user to require matching diacritics (e.g. imagine searching a corpus of Vietnamese and you don't want all the words that differ only in diacritics from your query)
+    convert = lambda s: translate_diacritic_alternatives_in_string(s, diacritic_dict, to_base=True)
+
+    row_match_func = lambda test_str: regex_pattern_matches_input(row_query_stripped, convert(test_str), full_match=row_query_is_match) if row_query_is_regex else string_pattern_matches_input(row_query_stripped, convert(test_str), full_match=row_query_is_match)
+    text_match_func = lambda test_str: regex_pattern_matches_input(text_query_stripped, convert(test_str), full_match=text_query_is_match) if text_query_is_regex else string_pattern_matches_input(text_query_stripped, convert(test_str), full_match=text_query_is_match)
 
     rows_to_search = []
     for line in lines_from_all_files:

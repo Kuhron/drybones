@@ -104,7 +104,7 @@ def create_project(ctx, project_name:str) -> None:
     click.echo(f"Created new project {project_name!r}.", err=True)
 
 
-def get_closest_parent_drybones_dir(fp:Path) -> Path | None:
+def get_closest_parent_drybones_dir(fp:Path, raise_if_none:bool=False) -> Path | None:
     fp = fp.absolute()
 
     # if it's a file, get the dir it's in
@@ -122,10 +122,16 @@ def get_closest_parent_drybones_dir(fp:Path) -> Path | None:
             return drybones_dir
         if is_filesystem_root(p):
             # we went all the way up without finding any .drybones dir
-            return None
+            break
         p = p.parent
         limiter += 1
-    return None
+    
+    # none found
+    if raise_if_none:
+        click.echo("No .drybones dir was found here or in any parent directories.", err=True)
+        raise click.Abort()
+    else:
+        return None
 
 
 def get_corpus_dir(drybones_fp:Path) -> Path:
