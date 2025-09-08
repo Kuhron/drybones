@@ -5,8 +5,9 @@ from drybones.Parse import Parse
 
 
 class WordAnalysis:
-    def __init__(self, parse, glosses):
+    def __init__(self, form, parse, glosses):
         assert len(parse.morpheme_strs) == len(glosses), f"Cannot create WordAnalysis from parse and gloss list of unequal length. Got {len(parse.morpheme_strs)} morphemes in parse and {len(glosses)} glosses."
+        self.form = form
         self.parse = parse
         self.glosses = glosses
         self.str = self.to_str()

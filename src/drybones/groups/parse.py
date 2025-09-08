@@ -171,7 +171,7 @@ def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_
                 gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
                 known_glosses_by_morpheme[morpheme][gloss_str] += 1
                 glosses_this_word.append(gloss_str)
-            accepted_analysis = WordAnalysis(parse, glosses_this_word)
+            accepted_analysis = WordAnalysis(word, parse, glosses_this_word)
             parse_cell = Cell(strs=morpheme_strs)
             gloss_cell = Cell(strs=glosses_this_word)
         

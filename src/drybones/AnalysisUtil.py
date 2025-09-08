@@ -2,6 +2,7 @@ import click
 from collections import Counter, defaultdict
 
 from drybones.Cell import Cell
+from drybones.DiacriticsUtil import get_char_to_alternatives_dict, translate_diacritic_alternatives_in_string
 from drybones.Parse import Parse
 from drybones.ParsingUtil import UNKNOWN_GLOSS, MORPHEME_DELIMITER, WORD_DELIMITER
 from drybones.Row import Row
@@ -11,7 +12,8 @@ from drybones.OptionsUtil import get_ordered_suggestions, show_ordered_suggestio
 from drybones.WordAnalysis import WordAnalysis
 
 
-def get_known_analyses(lines):
+def get_known_analyses(lines, match_diacritics=False):
+    d = get_char_to_alternatives_dict()
     known_analyses_by_word = defaultdict(Counter)
     baseline_label = DEFAULT_BASELINE_LABEL
     parse_label = DEFAULT_PARSE_LABEL
@@ -29,11 +31,15 @@ def get_known_analyses(lines):
                     # normal case, construct the analysis
                     for bl_cell, parse_cell, gloss_cell in zip(baseline_row, parse_row, gloss_row, strict=True):
                         bl_str = get_word_key_from_baseline_word(bl_cell.to_str())
+                        if match_diacritics:
+                            key_str = bl_str
+                        else:
+                            key_str = translate_diacritic_alternatives_in_string(bl_str, d, to_base=True)
                         morpheme_strs = parse_cell.strs
                         parse = Parse(morpheme_strs)
                         glosses = gloss_cell.strs
-                        analysis = WordAnalysis(parse, glosses)
-                        known_analyses_by_word[bl_str][analysis] += 1
+                        analysis = WordAnalysis(bl_str, parse, glosses)
+                        known_analyses_by_word[key_str][analysis] += 1
                 elif has_parse or has_gloss:
                     click.echo(f"line is parsed or glossed but not both:\n{l}")
                     raise click.Abort()
