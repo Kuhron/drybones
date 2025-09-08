@@ -29,7 +29,10 @@ class Row:
             return self.label.with_after_label_char() + " " + raw_s
         else:
             return raw_s
-        
+    
+    def is_aligned(self) -> bool:
+        return self.label.is_aligned()
+    
     def get_contents(self):
         return self.to_str(with_label=False)
 

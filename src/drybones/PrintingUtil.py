@@ -3,9 +3,12 @@
 import click
 import os
 import numbers
+from typing import List
 
 import drybones.ReadingUtil as ru
 from drybones.DebuggingUtil import get_counter_string
+from drybones.Line import Line
+from drybones.RowLabel import RowLabel
 
 DEFAULT_ROW_LABEL_FOR_LINE_LABEL = "Ln"
 
@@ -14,54 +17,65 @@ def get_print_string_of_partial_row(row, column_indices):
     # for non-aligned rows, show them in every column index group
     # for the line number, can put a parenthetical about which group we're in, e.g. "Kaikai 240 (1/3)"
     # need row label always
-    is_line_label = row.label.without_colon() == DEFAULT_ROW_LABEL_FOR_LINE_LABEL  # later should probably configure this instead of hardcoding
+    is_line_label = row.label.without_after_label_char() == DEFAULT_ROW_LABEL_FOR_LINE_LABEL  # later should probably configure this instead of hardcoding
     raise NotImplementedError
 
 
-def get_print_strings_of_line(line, labels_of_aligned_rows):
+def get_print_strings_of_line(line: Line):
     terminal_size = os.get_terminal_size()
     right_padding = 1
     terminal_width = terminal_size.columns - right_padding
     n_cells_per_row = max(len(row) for row in line)
-    cells = []
+    cell_lists = []
     row_labels = []
-    n_rows = len(line)
     for row in line:
         these_cells = [cell.strip() for cell in row] + ["" for i in range(n_cells_per_row - len(row))]
         assert len(these_cells) == n_cells_per_row
-        cells.append(these_cells)
+        cell_lists.append(these_cells)
         label = row.label
         row_labels.append(label)
-    is_aligned_by_index = {j: (row_labels[j].without_colon() in labels_of_aligned_rows) for j in range(n_rows)}
-    # the labels are also aligned
-    max_label_len = max(len(label.with_colon()) for label in row_labels)
-    max_seg_len_by_index = {i: max(get_display_width(these_cells[i]) for j, these_cells in enumerate(cells) if is_aligned_by_index[j] is True) for i in range(n_cells_per_row)}
 
+    # makes more sense to have the row object know if it's aligned, rather than passing around a list of which labels are aligned
+    is_aligned_by_index = {j: row.is_aligned() for j, row in enumerate(line)}
+
+    max_label_len = max(len(label.with_after_label_char()) for label in row_labels)
+    max_seg_len_by_index = {}
+    for i in range(n_cells_per_row):
+        display_widths = []
+        for j, these_cells in enumerate(cell_lists):
+            if is_aligned_by_index[j] is True:
+                display_width = get_display_width(these_cells[i])
+                display_widths.append(display_width)
+        if len(display_widths) == 0:
+            this_max_seg_len = 0  # TODO is this a good idea or should it be None? idk, see what happens, but this could be a source of bugs! it's low stakes because it's just for display but still, #BUGMAKER <-- for ctrl-f'ing for bad/uninformed choices I made that I knew were potential causes of future bugs
+        else:
+            this_max_seg_len = max(display_widths)
+        max_seg_len_by_index[i] = this_max_seg_len
+    
     after_label_delim = " "
     general_delim = " | "  # something clearly dividing but not too wide and not intrusive-looking
     after_label_delim_width = get_display_width(after_label_delim)
     general_delim_width = get_display_width(general_delim)
     column_index_groupings = get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_index, after_label_delim_width, general_delim_width, terminal_width)
-    strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cells, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels)
+    strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels)
 
     # debug
     debug_strs = [
         f"{n_cells_per_row = }, {terminal_width = }",
         f"{max_seg_len_by_index = }",
     ]
-    strs = [show_whitespace(s) for s in strs]  # debug
-    strs = debug_strs + strs
+    # strs = debug_strs + strs
 
     return strs
 
 
-def get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cells, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels):
+def get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels):
     strs = []
     group_delim = "- - - - - - - -"
     for column_index_grouping in column_index_groupings:
-        for row_i, these_cells in enumerate(cells):
-            label = row_labels[row_i].with_colon()
-            s = label + after_label_delim
+        for row_i, these_cells in enumerate(cell_lists):
+            label_str = row_labels[row_i].with_after_label_char()
+            s = label_str + after_label_delim
             # click.echo(f"initial s   = {show_whitespace(s)}")
             if is_aligned_by_index[row_i]:
                 for i in column_index_grouping:
@@ -70,8 +84,11 @@ def get_print_strings_of_line_helper_using_column_index_groupings(column_index_g
                     following_delim = "" if i == column_index_grouping[-1] else general_delim
                     s += following_delim
                     # click.echo(f"plus delim  = {show_whitespace(s)}")
+                    s = show_whitespace(s)
             else:
-                assert sum(len(x) > 0 for x in these_cells) <= 2, f"non-aligned row shouldn't have any cells other than label and content, got {these_cells}"
+                if sum(len(x) > 0 for x in these_cells) > 2:
+                    click.echo(f"\nError: non-aligned row shouldn't have any cells other than label and content.\nFor label {label_str!r}, got {these_cells}", err=True)
+                    raise click.Abort()
                 s += after_label_delim.join(these_cells)
                 # click.echo(f"non-aligned = {show_whitespace(s)}")
             strs.append(s)
@@ -118,7 +135,7 @@ def get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_in
     if current_grouping != []:
         column_index_groupings.append(current_grouping)
 
-    click.echo(f"created {column_index_groupings = }")
+    # click.echo(f"created {column_index_groupings = }")
 
     # debug
     # for grouping in column_index_groupings:
@@ -151,37 +168,37 @@ def dict_cumsum(d, extra_addends=None):
     return s
 
 
-def get_print_string_of_lines(lines, labels_of_aligned_rows):
+def get_print_string_of_lines(lines: List[Line]):
     s = ""
     for line in lines:
-        strs = get_print_strings_of_line(line, labels_of_aligned_rows)
+        strs = get_print_strings_of_line(line)
         for x in strs:
             s += x + "\n"
         s += "\n"
     return s
 
 
-def print_line(line, labels_of_aligned_rows):
-    strs = get_print_strings_of_line(line, labels_of_aligned_rows)
+def print_line(line):
+    strs = get_print_strings_of_line(line)
     for s in strs:
         click.echo(s)
 
 
-def print_text_line_by_line(fp, labels_of_aligned_rows):
-    lines = ru.get_lines_from_file(fp)
+def print_text_line_by_line(fp):
+    lines = ru.get_lines_and_residues_from_drybones_file(fp)
     for line in lines:
-        print_line(line, labels_of_aligned_rows)
+        print_line(line)
         click.echo()
         click.prompt("press enter to continue")
     click.echo(f"finished reading text at {fp}", err=True)
 
 
-def print_lines_in_terminal(lines, labels_of_aligned_rows):
-    click.echo(get_print_string_of_lines(lines, labels_of_aligned_rows))
+def print_lines_in_terminal(lines):
+    click.echo(get_print_string_of_lines(lines))
 
 
-def print_lines_in_pager(lines, labels_of_aligned_rows):
-    click.echo_via_pager(get_print_string_of_lines(lines, labels_of_aligned_rows))
+def print_lines_in_pager(lines: List[Line]):
+    click.echo_via_pager(get_print_string_of_lines(lines))
 
 
 def get_display_width(s):
@@ -210,10 +227,7 @@ if __name__ == "__main__":
     text_dir = "/home/kuhron/Horokoi/DryBonesTesting/"
     # later can make this configurable or have the user open a project directory
 
-    # labels_of_aligned_rows = ["Bl", "Mp", "Lx", "Gl", "Wc"]
-    labels_of_aligned_rows = ["Bl", "Mp", "Gl", "Wc"]  # test what happens when we change which rows are aligned
-
     dry_fnames = sorted([x for x in os.listdir(text_dir) if x.endswith(".dry")])
     for fname in dry_fnames:
         fp = os.path.join(text_dir, fname)
-        print_text_line_by_line(fp, labels_of_aligned_rows)
+        print_text_line_by_line(fp)

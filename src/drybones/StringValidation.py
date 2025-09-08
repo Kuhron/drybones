@@ -1,6 +1,7 @@
 # helping figure out what user meant to type
 
 import click
+from typing import List
 
 from drybones.Validation import Validated, Invalidated
 
@@ -43,7 +44,7 @@ def normalized_levenshtein(x, y):
     return d / max_d
 
 
-def validate_string(s, options, case_sensitive=False):
+def validate_string(s: str, options: List[str], case_sensitive:bool=False):
     if case_sensitive:
         s_test = s
         options_test = options

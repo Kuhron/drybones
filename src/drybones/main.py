@@ -32,7 +32,6 @@ def main(ctx):
     ctx.obj = GenericObject()  # there's probably a better way to do this but fine for now, so I can pass around global ronfig stuff without ImportErrors
     ctx.obj.drybones_dir_name = DRYBONES_DIR_NAME
     ctx.obj.project_config_file_name = PROJECT_CONFIG_FILE_NAME
-    ctx.obj.labels_of_aligned_rows = DEFAULT_ALIGNED_ROW_LABELS
 
 
 # @click.command

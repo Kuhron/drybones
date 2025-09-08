@@ -1,12 +1,11 @@
 Move things from this list to done.txt or wontdo.txt, for later review of what I have and have not done, to help with creating documentation and synthesizing other ideas for features/design.
 
 CURRENT TASK AT HAND (finish or abort cleanly before starting something else!):
-- change word analysis globally or throughout text
--- current subtask: show analyses for a wordform, e.g. `dry analyze Baseline "eka"` will list them like it would during parsing
---- should I allow this to be shortened to `dry form "eka"`? maybe but will need config about which row is the form, so maybe omit this for now
--- other subtasks:
---- break out of parsing loop when user wants to do this; upon being shown possible analyses of a form, user can do something like `:reassign 2>3`, `:reassign 1,2>3`, etc.
---- allow simultaneous reassigning of multiple analyses to one target, e.g. `1,2>3` will reassign 1 to 3 and 2 to 3
+- current subtask: show analyses for a wordform, e.g. `dry analyze Baseline "eka"` will list them like it would during parsing
+-- should I allow this to be shortened to `dry form "eka"`? maybe but will need config about which row is the form, so maybe omit this for now
+- other subtasks:
+-- break out of parsing loop when user wants to do this; upon being shown possible analyses of a form, user can do something like `:reassign 2>3`, `:reassign 1,2>3`, etc.
+-- allow simultaneous reassigning of multiple analyses to one target, e.g. `1,2>3` will reassign 1 to 3 and 2 to 3
 
 
 TODO:

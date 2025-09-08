@@ -18,27 +18,27 @@ class RowLabel:
         self.string = string
         self.aligned = aligned
 
-    def is_aligned(self):
+    def is_aligned(self) -> bool:
         return self.aligned
 
-    def with_after_label_char(self):
+    def with_after_label_char(self) -> str:
         return self.string + RowLabel.AFTER_LABEL_CHAR
     
-    def without_after_label_char(self):
+    def without_after_label_char(self) -> str:
         return self.string
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<RowLabel {repr(self.without_after_label_char())}>"
     
-    def __str__(self):
+    def __str__(self) -> str:
         return self.without_after_label_char()
     
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if type(other) is not RowLabel:
             return NotImplemented
         return self.string == other.string
     
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if type(other) is not RowLabel:
             return NotImplemented
         return self.string < other.string

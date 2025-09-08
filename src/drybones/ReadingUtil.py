@@ -4,26 +4,28 @@
 import click
 from collections import defaultdict
 from pathlib import Path
+from typing import List
 
 from drybones.Cell import Cell
 from drybones.Constants import DRYBONES_FILE_EXTENSION
 from drybones.Line import Line
+from drybones.LinesAndResidues import LinesAndResidues
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING
 from drybones.Text import Text
 
 
-def get_drybones_file_from_text_name(text_name, corpus_dir):
+def get_drybones_file_from_text_name(text_name: str, corpus_dir: Path) -> Path:
     name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=False)
     return name_to_text[text_name].source_fp
 
 
-def get_lines_from_text_name(text_name: str, corpus_dir: Path):
+def get_lines_and_residues_from_text_name(text_name: str, corpus_dir: Path) -> LinesAndResidues:
     fp = get_drybones_file_from_text_name(text_name, corpus_dir)
-    return get_lines_from_drybones_file(fp)
+    return get_lines_and_residues_from_drybones_file(fp)
 
 
-def get_raw_lines_from_file(fp, with_newlines=False):
+def get_raw_line_strs_from_file(fp: Path, with_newlines:bool=False) -> List[str]:
     with open(fp) as f:
         lines = f.readlines()
     for l in lines:
@@ -34,7 +36,7 @@ def get_raw_lines_from_file(fp, with_newlines=False):
         return [l[:-1] for l in lines]
 
 
-def get_lines_from_drybones_file(fp: Path, enforce_unique_designations=True):
+def get_lines_and_residues_from_drybones_file(fp: Path, enforce_unique_designations:bool=True) -> LinesAndResidues:
     line_groups, residues_by_location = get_line_group_strings_from_drybones_file(fp)
     lines = []
     row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
@@ -86,13 +88,14 @@ def get_lines_from_drybones_file(fp: Path, enforce_unique_designations=True):
             rows.append(row)
         if enforce_unique_designations:
             if line_designation in desigs_seen:
-                raise Exception(f"duplicate line designation: {line_designation!r}")
+                click.echo(f"duplicate line designation: {line_designation!r}", err=True)
+                raise click.Abort()
             else:
                 desigs_seen.add(line_designation)
         line = Line(line_designation, rows)
         lines.append(line)
     # click.echo(f"loaded lines from {fp}")
-    return lines, residues_by_location
+    return LinesAndResidues(lines, residues_by_location)
 
 
 def get_line_group_strings_from_drybones_file(fp: Path):
@@ -107,8 +110,6 @@ def get_line_group_strings_from_drybones_file(fp: Path):
         groups.append(group)
         if len(residues) > 0:
             residue = Line.AFTER_LINE.join(residues)
-            if len(residue.strip()) > 0:
-                click.echo(f"ignoring text outside of line block:\n{residue!r}\n")
             last_group_index = len(groups) - 1
             location = last_group_index + 0.5
             assert location not in residues_by_location
@@ -122,7 +123,7 @@ def get_line_group_strings_from_drybones_file(fp: Path):
 def get_text_from_file(fp: Path, with_contents: bool=True):
     name = fp.stem  # for now just take name from the filename, but later want it to match the line designations and/or be in some metadata in the text's .dry file itself
     if with_contents:
-        lines, residues = get_lines_from_drybones_file(fp)
+        lines, residues = get_lines_and_residues_from_drybones_file(fp)
     else:
         lines, residues = [], []
     t = Text(name, lines, residues, source_fp=fp)
@@ -169,10 +170,10 @@ def get_all_drybones_files_in_dir(d: Path):
 
 
 def get_lines_from_all_drybones_files_in_dir(d: Path):
-    texts = get_all_texts_in_dir(d)
+    name_to_text = get_all_texts_in_dir(d)
     lines = []
-    for i, t in enumerate(texts):
+    for i, (name, t) in enumerate(name_to_text.items()):
         lines += t.lines
-        click.echo(f"loading lines from file {i+1}/{len(texts)}\r", nl=False)
+        click.echo(f"loading lines from file {i+1}/{len(name_to_text)}\r", nl=False)
     click.echo()
     return lines
