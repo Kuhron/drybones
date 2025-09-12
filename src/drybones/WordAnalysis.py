@@ -1,12 +1,19 @@
 # class for a given parse along with a gloss for each of the parse's morphemes
 
+import click
+
 from drybones.Cell import Cell
 from drybones.Parse import Parse
 
 
 class WordAnalysis:
     def __init__(self, form, parse, glosses):
-        assert len(parse.morpheme_strs) == len(glosses), f"Cannot create WordAnalysis from parse and gloss list of unequal length. Got {len(parse.morpheme_strs)} morphemes in parse and {len(glosses)} glosses."
+        if len(parse.morpheme_strs) != len(glosses):
+            s = "Cannot create WordAnalysis from parse and gloss list of unequal length.\n"
+            s += f"Got {len(parse.morpheme_strs)} morphemes in parse: {parse.morpheme_strs}\n"
+            s += f"Got {len(glosses)} glosses: {glosses}"
+            click.echo(s, err=True)
+            raise click.Abort()
         self.form = form
         self.parse = parse
         self.glosses = glosses

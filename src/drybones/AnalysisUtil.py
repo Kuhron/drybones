@@ -30,7 +30,7 @@ def get_known_analyses(lines, match_diacritics=False):
                 if has_parse and has_gloss:
                     # normal case, construct the analysis
                     for bl_cell, parse_cell, gloss_cell in zip(baseline_row, parse_row, gloss_row, strict=True):
-                        bl_str = get_word_key_from_baseline_word(bl_cell.to_str())
+                        bl_str = get_word_key_from_baseline_word(bl_cell.to_str(), diacritics_dict=d)
                         if match_diacritics:
                             key_str = bl_str
                         else:
@@ -171,5 +171,9 @@ def get_gloss_from_user(morpheme, known_glosses_by_morpheme):
     return gloss
 
 
-def get_word_key_from_baseline_word(word):
-    return remove_punctuation(word.lower())
+def get_word_key_from_baseline_word(word, diacritics_dict, match_diacritics=False):
+    if match_diacritics:
+        key_str = word
+    else:
+        key_str = translate_diacritic_alternatives_in_string(word, diacritics_dict, to_base=True)
+    return remove_punctuation(key_str.lower())

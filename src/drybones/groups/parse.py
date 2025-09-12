@@ -13,6 +13,8 @@ colorama_init()
 
 from drybones.AnalysisUtil import get_known_analyses, get_known_parses, get_known_glosses, get_analysis_from_user, get_parse_from_user, get_gloss_from_user, get_word_key_from_baseline_word
 from drybones.Cell import Cell
+from drybones.DiacriticDict import DiacriticDict
+from drybones.DiacriticsUtil import get_char_to_alternatives_dict
 from drybones.FileEditingUtil import setup_file_editing_operation, finish_file_editing_operation
 from drybones.Line import Line
 from drybones.OptionsUtil import get_ordered_suggestions, show_ordered_suggestions
@@ -90,9 +92,10 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
         known_analyses_by_word = get_known_analyses(lines_from_all_files)
         known_parses_by_word = get_known_parses(known_analyses_by_word)
         known_glosses_by_morpheme = get_known_glosses(known_analyses_by_word)
+        d = get_char_to_alternatives_dict()
         try:
             for line in lines_to_parse:
-                known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation)
+                known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation, diacritics_dict=d)
         except KeyboardInterrupt:
             click.echo("\nQuitting parsing.")
         finally:
@@ -114,7 +117,7 @@ GREEN_BACK = lambda s: Back.GREEN+Fore.BLACK + s + Style.RESET_ALL
 YELLOW_BACK = lambda s: Back.YELLOW+Fore.BLACK + s + Style.RESET_ALL
 
 
-def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_word: dict, known_glosses_by_morpheme: dict, new_lines_by_designation: dict):
+def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_word: dict, known_glosses_by_morpheme: dict, new_lines_by_designation: dict, diacritics_dict: DiacriticDict):
     designation = line.designation
 
     baseline_row = line[DEFAULT_BASELINE_LABEL]
@@ -147,7 +150,7 @@ def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_
     for i, word in enumerate(words):
         print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i)
         click.echo(translation_str)
-        word = get_word_key_from_baseline_word(word)
+        word = get_word_key_from_baseline_word(word, diacritics_dict, match_diacritics=False)
 
         if word not in known_analyses_by_word:
             analysis = None

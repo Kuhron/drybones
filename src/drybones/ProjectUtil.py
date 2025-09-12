@@ -114,7 +114,7 @@ def get_closest_parent_drybones_dir(fp:Path, raise_if_none:bool=False) -> Path |
     else:
         p = fp
     
-    limit = 10000
+    limit = 1000
     limiter = 0
     while limiter < limit:
         drybones_dir = p / DRYBONES_DIR_NAME
@@ -138,8 +138,11 @@ def get_corpus_dir(drybones_fp:Path) -> Path:
     # get the dir in which we should glob for .dry files from which to get existing parses/glosses
     d2 = get_closest_parent_drybones_dir(drybones_fp)
     if d2 is None:
-        # just use .dry files in the dir with this file
-        return drybones_fp.parent
+        # just use .dry files in the dir with this file (or this dir itself if the path is a dir)
+        if drybones_fp.is_file():
+            return drybones_fp.parent
+        else:
+            return drybones_fp
     else:
         assert d2.name == ".drybones", d2.name
         return d2.parent

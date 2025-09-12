@@ -52,6 +52,11 @@ TODO:
 - reorder the rows, and/or enforce a certain row order, on a text file, e.g. `dry reorder N,Baseline,Gloss,Translation`, should warn if it omits any existing lines (don't let it delete omitted ones, just put them sorted at the end or something), should show user the existing line labels beforehand, can also make it do some default order based on order of first appearance in the file
 - concordance view of something you searched for
 - corpus stats (how many words, how many texts)
+- during loading lines from a .dry file, make it clearer to user why rows are misaligned (different numbers of cells): show which cells are aligned with which so they can more easily spot the problems and fix the .dry file (example: PAIA_flexpy_export.drytest, line 9)
+- duplicate line into a,b,c (however many the user wants)
+- automate removing spaces around punctuation that FLEx put in there, for easier importing for myself and others who migrate from FLEx to DryBones
+-- more generally for the importing workflow, use the commits of the Hurukui repo where the message is about "importing/imported" some texts in summer 2025, can use these as snapshots of what someone's data might look like after exporting via flexpy, also reference the file "hurukui/DryBones/FlextextToDrybonesWorkflow.txt" which describes the workflow I used during this time and which should be made easier on users
+-- the dream would be a drybones command to import a whole .fwdata directly, can call flexpy functions as part of this
 
 
 command name/syntax ideas:
@@ -68,3 +73,4 @@ command name/syntax ideas:
 - dry text-info Kaikai  # some info about the text, such as word count, line count, title, whatever else?
 - dry morpheme show-all  # show all morphemes
 - dry morpheme search  # search for a morpheme
+- dry wrap {string}  # print out the input string with the line delimiters around it
