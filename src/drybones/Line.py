@@ -1,7 +1,8 @@
 from typing import List
 
+from drybones.Cell import Cell
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_BASELINE_LABEL
+from drybones.RowLabel import RowLabel, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_BASELINE_LABEL, DEFAULT_LINE_DESIGNATION_LABEL
 from drybones.Validation import Validated, Invalidated, InvalidationError
 
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
@@ -14,7 +15,7 @@ class Line:
         assert type(rows) is list
         assert all(type(x) is Row for x in rows)
         self.designation = designation
-        self.rows = rows
+        self.rows = [Line.create_designation_row(self.designation)] + rows
         self.validate_row_lengths()
         self.row_by_label = self.construct_row_by_label()
         self.row_label_by_string = self.construct_row_label_by_string()
@@ -89,3 +90,10 @@ class Line:
             return {x.string for x in s}
         else:
             return s
+
+    @staticmethod
+    def create_designation_row(designation_str) -> Row:
+        cells = [Cell(strs=[designation_str])]
+        row = Row(label=DEFAULT_LINE_DESIGNATION_LABEL, cells=cells)
+        return row
+    

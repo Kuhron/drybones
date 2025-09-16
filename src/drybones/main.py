@@ -92,6 +92,7 @@ from drybones.groups.project import project as project_group
 from drybones.groups.read import read as read_group
 from drybones.groups.search import search as search_group
 from drybones.groups.text import text as text_group
+from drybones.groups.wrap import wrap as wrap_group
 
 main.add_command(accent_group)
 main.add_command(analyze_group)
@@ -104,6 +105,7 @@ main.add_command(project_group)
 main.add_command(read_group)
 main.add_command(search_group)
 main.add_command(text_group)
+main.add_command(wrap_group)
 
 
 if __name__ == '__main__':

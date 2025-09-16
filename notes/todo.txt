@@ -57,7 +57,7 @@ TODO:
 - automate removing spaces around punctuation that FLEx put in there, for easier importing for myself and others who migrate from FLEx to DryBones
 -- more generally for the importing workflow, use the commits of the Hurukui repo where the message is about "importing/imported" some texts in summer 2025, can use these as snapshots of what someone's data might look like after exporting via flexpy, also reference the file "hurukui/DryBones/FlextextToDrybonesWorkflow.txt" which describes the workflow I used during this time and which should be made easier on users
 -- the dream would be a drybones command to import a whole .fwdata directly, can call flexpy functions as part of this
-
+- don't repeat the searching action on ";;" in `dry search` REPL, just show the results again that you already computed (user should be made aware that in the same running REPL, the corpus will NOT be reloaded from disk; if they want to load new changes, they'll need to exit it and run `dry search` again, or also I can put a command in there to load any new changes and continue the REPL, whereupon invocations of ";;" will actually re-run the search)
 
 command name/syntax ideas:
 - dry publish {text}  # copies the text's file to a specified directory where more permanent versions live (like what I want to do with {Hurukui repo}/Texts/ as of 2025-04-22), can have option for overwrite existing file or however I want to handle that
