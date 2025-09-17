@@ -2,8 +2,14 @@
 # want it as a class for type checker
 
 
+from typing import List
+
+from drybones.Line import Line
+
+
+
 class LinesAndResidues:
-    def __init__(self, lines, residues_by_location):
+    def __init__(self, lines: List[Line], residues_by_location: dict):
         self.lines = lines
         self.residues_by_location = residues_by_location
 

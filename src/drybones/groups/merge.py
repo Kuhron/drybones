@@ -7,7 +7,7 @@ from drybones.Row import Row
 from drybones.RowLabel import RowLabel
 
 
-@click.command
+@click.command(no_args_is_help=True)
 @click.argument("input_fp1", required=True, type=Path)
 @click.argument("rows1", required=True, type=str)
 @click.argument("input_fp2", required=True, type=Path)
@@ -15,17 +15,17 @@ from drybones.RowLabel import RowLabel
 @click.argument("output_fp", required=True, type=Path)
 @click.pass_context
 def merge(ctx, input_fp1, rows1, input_fp2, rows2, output_fp):
-    """Merge lines from two files, specifying which rows should come from which file."""
+    """Merge lines from two files, specifying which rows should come from which file.
 
-    # can remap row labels as they are taken from a file, e.g. "Baseline>BaselineRaw" means to get "Baseline" from the file but output it instead with the label "BaselineRaw"
-    # '*' means get all other row labels from this file (the string '*' itself should be a prohibited label)
-    # '/' separating outputs means the input row will be copied to multiple rows in the output
+    # can remap row labels as they are taken from a file, e.g. "Baseline>BaselineRaw" means to get "Baseline" from the file but output it instead with the label "BaselineRaw"\n
+    # '*' means get all other row labels from this file (the string '*' itself should be a prohibited label)\n
+    # '/' separating outputs means the input row will be copied to multiple rows in the output\n
 
-    # mockup
-    """
-    $ dry merge Hevi_Raw.dry "Baseline > BaselineRaw" Hevi.dry "Parse, Gloss, Translation" Hevi_combined.dry
-    $ dry merge HkNb4.dry "Baseline, Translation" HkNb4_Raw.dry "*" Hevi_combined.dry
-    $ dry merge Hevi_Raw.dry "Baseline > BaselineRaw / BaselineToClean, Translation > TranslationRaw / TranslationToClean" Hevi.dry "*" Hevi_combined.dry
+    # mockup\n
+    $ dry merge Hevi_Raw.dry "Baseline > BaselineRaw" Hevi.dry "Parse, Gloss, Translation" Hevi_combined.dry\n
+    $ dry merge HkNb4.dry "Baseline, Translation" HkNb4_Raw.dry "*" Hevi_combined.dry\n
+    $ dry merge Hevi_Raw.dry "Baseline > BaselineRaw / BaselineToClean, Translation > TranslationRaw / TranslationToClean" Hevi.dry "*" Hevi_combined.dry\n
+    $ dry merge WP2.dry "BaselineRaw>Baseline,TranslationRaw>Translation" WP2.dry "BaselineRaw,TranslationRaw" a.dry\n
     """
 
     assert output_fp not in [input_fp1, input_fp2], "output file must be different from input files"
@@ -36,8 +36,8 @@ def merge(ctx, input_fp1, rows1, input_fp2, rows2, output_fp):
     _new_drybones_fp2, lines2, residues_by_location2, line_designations_in_order2, lines_by_designation2, _initial_hash2 = setup_file_editing_operation(input_fp2, overwrite=False)
     # we won't use the hashes to guard against overwriting because this operation makes a new file
 
-    all_labels1 = get_all_row_labels(lines1)
-    all_labels2 = get_all_row_labels(lines2)
+    all_labels1 = get_all_row_labels(lines1, exclude_designation=True)
+    all_labels2 = get_all_row_labels(lines2, exclude_designation=True)
 
     if line_designations_in_order1 != line_designations_in_order2:
         raise ValueError("line designations must match exactly, in the same order")
@@ -68,20 +68,22 @@ def merge(ctx, input_fp1, rows1, input_fp2, rows2, output_fp):
         new_line = Line(desig, rows)
         new_lines_by_designation[desig] = new_line
     
-    residues_by_location_chosen = None
+    residues_by_location_chosen = {}  # default value if no directive gets the residues
     for fp, from_label_str, to_label_str in directives:
         if from_label_str == RowLabel.RESIDUES_PSEUDO_LABEL:
             residues_by_location_chosen = [residues_by_location1, residues_by_location2][fp_to_index[fp]]
             break
 
+    # FIXME now the lines have duplicate designations because it thinks the designation in a file's line strings is a content line
+
     finish_file_editing_operation(new_drybones_fp=output_fp, residues_by_location=residues_by_location_chosen, line_designations_in_order=line_designations_in_order, new_lines_by_designation=new_lines_by_designation, initial_hash=None)
     click.echo("done merging")
 
 
-def get_all_row_labels(lines):
+def get_all_row_labels(lines, exclude_designation=True):
     res = set()
     for line in lines:
-        res |= line.get_all_row_labels(string=True)
+        res |= line.get_all_row_labels(string=True, exclude_designation=exclude_designation)
     return res
 
 
@@ -177,7 +179,7 @@ def parse_row_directives(fp1, s1, all_labels1, fp2, s2, all_labels2):
     click.echo()
 
     for fp, all_labels, from_labels_seen in zip([fp1, fp2], [all_labels1, all_labels2], [from_labels_seen1, from_labels_seen2]):
-        print(from_labels_seen)
+        print(f"{from_labels_seen = }")
         labels_dropped = all_labels - from_labels_seen
         if len(labels_dropped) > 0:
             delim = "\n\t"

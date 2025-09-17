@@ -15,7 +15,8 @@ class Line:
         assert type(rows) is list
         assert all(type(x) is Row for x in rows)
         self.designation = designation
-        self.rows = [Line.create_designation_row(self.designation)] + rows
+        self.designation_row = Line.create_designation_row(self.designation)
+        self.rows = rows
         self.validate_row_lengths()
         self.row_by_label = self.construct_row_by_label()
         self.row_label_by_string = self.construct_row_label_by_string()
@@ -79,13 +80,15 @@ class Line:
     
     def to_string_for_drybones_file(self) -> str:
         strs = []
-        for row in self.rows:
+        for row in [self.designation_row] + self.rows:
             s = row.to_str(with_label=True)
             strs.append(s)
         return Line.BEFORE_LINE + "\n".join(strs) + Line.AFTER_LINE
 
-    def get_all_row_labels(self, string=False):
+    def get_all_row_labels(self, string=False, exclude_designation=True):
         s = set(self.row_by_label.keys())
+        if exclude_designation:
+            s.remove(DEFAULT_LINE_DESIGNATION_LABEL)
         if string:
             return {x.string for x in s}
         else:

@@ -40,7 +40,7 @@ def output_updated_lines(new_lines, residues_by_location, new_drybones_fp, initi
     for i, l in enumerate(new_lines):
         location = i-0.5
         locations_checked.add(location)
-        residue_before_line = residues_by_location.get(location, "")
+        residue_before_line = residues_by_location.get(location, "\n")
         line_str = l.to_string_for_drybones_file() 
         s_to_write += residue_before_line + line_str
     final_location = i+0.5  # actually using the final value of a loop variable outside the loop? crazy
