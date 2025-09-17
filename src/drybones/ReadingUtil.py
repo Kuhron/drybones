@@ -66,6 +66,7 @@ def get_lines_and_residues_from_drybones_file(fp: Path, enforce_unique_designati
 
             if label == DEFAULT_LINE_DESIGNATION_LABEL:
                 line_designation = row_text
+                continue  # don't include this in the content rows
 
             if label.is_aligned():
                 cell_texts = row_text.split(Row.INTRA_ROW_DELIMITER)

@@ -1,3 +1,4 @@
+import click
 from typing import List
 
 from drybones.Cell import Cell
@@ -16,6 +17,7 @@ class Line:
         assert all(type(x) is Row for x in rows)
         self.designation = designation
         self.designation_row = Line.create_designation_row(self.designation)
+        Line.check_no_designation_in_content_rows(rows)
         self.rows = rows
         self.validate_row_lengths()
         self.row_by_label = self.construct_row_by_label()
@@ -100,3 +102,10 @@ class Line:
         row = Row(label=DEFAULT_LINE_DESIGNATION_LABEL, cells=cells)
         return row
     
+    @staticmethod
+    def check_no_designation_in_content_rows(rows):
+        for row in rows:
+            if row.label == DEFAULT_LINE_DESIGNATION_LABEL:
+                click.echo("Cannot initiate line with designation row as one of the content rows")
+                raise click.Abort()
+

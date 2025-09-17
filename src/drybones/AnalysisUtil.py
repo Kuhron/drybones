@@ -53,6 +53,9 @@ def get_known_analyses(lines, match_diacritics=False):
                 else:
                     # it has none of the above, ignore it
                     continue
+        except KeyboardInterrupt:
+            # so it doesn't print "Error in {some random line}" if user interrupts, as this is confusing because there is not actually an error in that line, it is just what the function was in the middle of processing when it got interrupted
+            raise
         except:
             print(f"\nError in line:\n{l.to_string_for_drybones_file()}")
             raise
