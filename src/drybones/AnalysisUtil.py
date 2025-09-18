@@ -13,7 +13,7 @@ from drybones.WordAnalysis import WordAnalysis
 
 
 def get_known_analyses(lines, match_diacritics=False):
-    d = get_char_to_alternatives_dict()
+    diacritics_dict = get_char_to_alternatives_dict()
     known_analyses_by_word = defaultdict(Counter)
     baseline_label = DEFAULT_BASELINE_LABEL
     parse_label = DEFAULT_PARSE_LABEL
@@ -30,16 +30,16 @@ def get_known_analyses(lines, match_diacritics=False):
                 if has_parse and has_gloss:
                     # normal case, construct the analysis
                     for bl_cell, parse_cell, gloss_cell in zip(baseline_row, parse_row, gloss_row, strict=True):
-                        bl_str = get_word_key_from_baseline_word(bl_cell.to_str(), diacritics_dict=d)
-                        if match_diacritics:
-                            key_str = bl_str
-                        else:
-                            key_str = translate_diacritic_alternatives_in_string(bl_str, d, to_base=True)
+                        form_raw = bl_cell.to_str()
+                        form_normal = remove_punctuation(form_raw)
+                        form_key = get_word_key_from_baseline_word(form_normal, diacritics_dict=diacritics_dict, match_diacritics=match_diacritics)
+                        if not match_diacritics:
+                            form_key = translate_diacritic_alternatives_in_string(form_key, diacritics_dict, to_base=True)
                         morpheme_strs = parse_cell.strs
                         parse = Parse(morpheme_strs)
                         glosses = gloss_cell.strs
-                        analysis = WordAnalysis(bl_str, parse, glosses)
-                        known_analyses_by_word[key_str][analysis] += 1
+                        analysis = WordAnalysis(form_normal=form_normal, form_key=form_key, parse=parse, glosses=glosses)
+                        known_analyses_by_word[form_key][analysis] += 1
                 elif has_parse or has_gloss:
                     click.echo(f"line is parsed or glossed but not both:\n{l}")
                     raise click.Abort()
@@ -179,4 +179,4 @@ def get_word_key_from_baseline_word(word, diacritics_dict, match_diacritics=Fals
         key_str = word
     else:
         key_str = translate_diacritic_alternatives_in_string(word, diacritics_dict, to_base=True)
-    return remove_punctuation(key_str.lower())
+    return key_str.lower()

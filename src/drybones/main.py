@@ -7,7 +7,7 @@ import yaml
 from pathlib import Path
 
 from drybones._version import __version__
-from drybones.GenericObject import GenericObject
+from drybones.DryBonesSession import DryBonesSession
 from drybones.RowLabel import DEFAULT_ALIGNED_ROW_LABELS
 from drybones.Constants import PROG_NAME_FOR_VERSION, PROG_NAME_FOR_COMMAND, DRYBONES_DIR_NAME, GLOBAL_CONFIG_FP, HOME_DIR, PROJECT_CONFIG_FILE_NAME
 
@@ -30,20 +30,13 @@ def main(ctx):
     """Welcome to DryBones, a tool for parsing linguistic texts in the command line.\n
     Author: Wesley Kuhron Jones\n
     Source: https://github.com/Kuhron/drybones"""
-    ctx.obj = GenericObject()  # there's probably a better way to do this but fine for now, so I can pass around global ronfig stuff without ImportErrors
-    ctx.obj.drybones_dir_name = DRYBONES_DIR_NAME
-    ctx.obj.project_config_file_name = PROJECT_CONFIG_FILE_NAME
+    ctx.obj = DryBonesSession(
+        drybones_dir_name = DRYBONES_DIR_NAME,
+        project_config_file_name = PROJECT_CONFIG_FILE_NAME,
+    )
 
 
-# @click.command
-# def example():
-#     """This is an example subcommand."""
-#     # example subcommand so one can type `dry subcommand` in a git-like fashion
-#     click.echo("this is a subcommand")
-# main.add_command(example)
-
-
-@click.command
+@click.command()
 @click.argument("subcommand")
 def help(subcommand=None):
     """Show help for a subcommand."""
@@ -60,7 +53,7 @@ def help(subcommand=None):
 main.add_command(help)
 
 
-@click.command
+@click.command()
 def version():
     """Show DryBones version."""
     click.echo(VERSION_MESSAGE % {"prog": PROG_NAME_FOR_VERSION, "version":__version__})

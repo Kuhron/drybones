@@ -8,7 +8,7 @@ from drybones.Row import Row
 from drybones.RowLabel import RowLabel
 
 
-@click.command
+@click.command()
 @click.argument("drybones_fp", required=True, type=Path)
 @click.option("--mapping", "-m", required=True, type=str)
 @click.option("--overwrite", "-w", type=bool, is_flag=True, help="Overwrite the input file. If false, a separate file will be created.")

@@ -10,7 +10,7 @@ from drybones.StringValidation import validate_string
 from drybones.Validation import Validated, Invalidated
 
 
-@click.command
+@click.command()
 @click.argument("text_name")
 @click.argument("line_number", required=False, type=int)
 @click.pass_context

@@ -11,7 +11,7 @@ from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_ALIGNED_ROW_LABELS, DEFAULT_LINE_DESIGNATION_LABEL
 
 
-@click.command
+@click.command()
 @click.argument("text_name")
 def enter(text_name):
     """Enter raw data for a text. This can also be done manually in the text files themselves."""

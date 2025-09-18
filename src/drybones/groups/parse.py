@@ -49,7 +49,7 @@ from drybones.WordAnalysis import WordAnalysis
 # TODO do we want to clear the screen at each step in the parsing? so that certain things appear in the same place to the eyes? (e.g. first option, the sentence itself) could reduce amount of eye-scanning needed for parseng. this could be a flag passed to the command to allow user preference
 
 
-@click.command
+@click.command()
 @click.argument("drybones_fp", required=True, type=Path)
 @click.argument("line_designation", required=False, type=str)
 @click.option("--shuffle", "-s", type=bool, is_flag=True, help="Shuffle the lines during parsing.")
@@ -92,10 +92,10 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
         known_analyses_by_word = get_known_analyses(lines_from_all_files)
         known_parses_by_word = get_known_parses(known_analyses_by_word)
         known_glosses_by_morpheme = get_known_glosses(known_analyses_by_word)
-        d = get_char_to_alternatives_dict()
+        diacritics_dict = get_char_to_alternatives_dict()
         try:
             for line in lines_to_parse:
-                known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation, diacritics_dict=d)
+                known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation = parse_single_line(line, known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation, diacritics_dict=diacritics_dict)
         except KeyboardInterrupt:
             click.echo("\nQuitting parsing.")
         finally:
@@ -106,8 +106,6 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     # :{designation} = go re-parse line of this designation
     # :q = quit
 
-
-COMMAND_CHAR = ":"
 
 RED = lambda s: Fore.RED + s + Style.RESET_ALL
 GREEN = lambda s: Fore.GREEN + s + Style.RESET_ALL
@@ -174,7 +172,7 @@ def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_
                 gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
                 known_glosses_by_morpheme[morpheme][gloss_str] += 1
                 glosses_this_word.append(gloss_str)
-            accepted_analysis = WordAnalysis(word, parse, glosses_this_word)
+            accepted_analysis = WordAnalysis(form_normal=word, form_key=word, parse=parse, glosses=glosses_this_word)
             parse_cell = Cell(strs=morpheme_strs)
             gloss_cell = Cell(strs=glosses_this_word)
         
@@ -218,8 +216,4 @@ def print_baseline(designation, baseline_text, production_str, judgment_str, wor
     
     pj_str = "" if production_str == "" and judgment_str == "" else production_str + judgment_str + " "
     click.echo(f"{designation}. {pj_str}{text}")
-
-
-def is_command(s: str) -> bool:
-    return s.startswith(COMMAND_CHAR)
 

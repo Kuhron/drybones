@@ -21,11 +21,11 @@ def get_char_to_alternatives_dict() -> DiacriticDict:
     with open(fp) as f:
         lines = f.readlines()
     tups = [l.strip().split(" ") for l in lines]
-    d = DiacriticDict()
+    diacritics_dict = DiacriticDict()
     for key, base, *alternatives in tups:
         alternatives = [translate_unicode_escapes_in_string(x) for x in alternatives]
-        d.add(key, base, alternatives)
-    return d
+        diacritics_dict.add(key, base, alternatives)
+    return diacritics_dict
 
 
 def translate_unicode_escapes_in_string(s: str) -> str:
