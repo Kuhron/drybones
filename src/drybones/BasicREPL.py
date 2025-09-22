@@ -17,6 +17,9 @@ class BasicREPL:
         # "The exception passed in should never be reraised explicitly - instead, this method should return a false value to indicate that the method completed successfully and does not want to suppress the raised exception.""
 
         if exc_type is KeyboardInterrupt:
+            click.echo("^C")
+            suppress_exceptions = True
+        elif exc_type is EOFError:
             exit_str = f"\nQuitting {self.session_type_str} session."
             click.echo(exit_str)
             suppress_exceptions = True

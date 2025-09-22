@@ -37,6 +37,9 @@ class WordAnalysis:
     def get_gloss_str(self):
         return Cell.INTRA_CELL_DELIMITER.join(self.glosses)
     
+    def __repr__(self):
+        return self.to_str()
+
     def __key(self):
         # https://stackoverflow.com/a/2909119/7376935
         return (self.form_normal, self.form_key, self.parse, tuple(self.glosses))

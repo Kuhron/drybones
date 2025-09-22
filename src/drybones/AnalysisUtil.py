@@ -179,4 +179,18 @@ def get_word_key_from_baseline_word(word, diacritics_dict, match_diacritics=Fals
         key_str = word
     else:
         key_str = translate_diacritic_alternatives_in_string(word, diacritics_dict, to_base=True)
+    key_str = remove_punctuation(key_str)
     return key_str.lower()
+
+
+def convert_counter_to_list(counter, count_descending=True):
+    return [k for k,v in sorted(counter.items(), key=lambda kv: kv[1], reverse=count_descending)]
+
+
+def convert_dict_of_counters_to_dict_of_lists(d, count_descending=True):
+    new_d = defaultdict(list)
+    for key, counter in d.items():
+        assert type(counter) is Counter, f"needed Counter, got {counter} of type {type(counter)}"
+        new_d[key] = convert_counter_to_list(counter, count_descending=count_descending)
+    return new_d
+
