@@ -8,16 +8,13 @@ from typing import List
 import drybones.ReadingUtil as ru
 from drybones.DebuggingUtil import get_counter_string
 from drybones.Line import Line
-from drybones.RowLabel import RowLabel
-
-DEFAULT_ROW_LABEL_FOR_LINE_LABEL = "Ln"
+from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL
 
 
 def get_print_string_of_partial_row(row, column_indices):
     # for non-aligned rows, show them in every column index group
     # for the line number, can put a parenthetical about which group we're in, e.g. "Kaikai 240 (1/3)"
     # need row label always
-    is_line_label = row.label.without_after_label_char() == DEFAULT_ROW_LABEL_FOR_LINE_LABEL  # later should probably configure this instead of hardcoding
     raise NotImplementedError
 
 
@@ -57,7 +54,10 @@ def get_print_strings_of_line(line: Line):
     after_label_delim_width = get_display_width(after_label_delim)
     general_delim_width = get_display_width(general_delim)
     column_index_groupings = get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_index, after_label_delim_width, general_delim_width, terminal_width)
-    strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels)
+    desig_str = line.designation_row.to_str(with_label=True)
+    content_strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels)
+
+    strs = [desig_str] + content_strs
 
     # debug
     debug_strs = [
@@ -84,7 +84,7 @@ def get_print_strings_of_line_helper_using_column_index_groupings(column_index_g
                     following_delim = "" if i == column_index_grouping[-1] else general_delim
                     s += following_delim
                     # click.echo(f"plus delim  = {show_whitespace(s)}")
-                    s = show_whitespace(s)
+                    # s = show_whitespace(s)
             else:
                 if sum(len(x) > 0 for x in these_cells) > 2:
                     click.echo(f"\nError: non-aligned row shouldn't have any cells other than label and content.\nFor label {label_str!r}, got {these_cells}", err=True)

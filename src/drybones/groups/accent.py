@@ -27,13 +27,17 @@ accent.add_command(accent_table)
 @click.argument("input_str", type=str, required=False, default=None)
 def accent_convert_string(input_str: str|None):
     diacritics_dict = get_char_to_alternatives_dict()
-    try:
-        while True:
-            s = input("string> ")
-            s2 = translate_diacritic_alternatives_in_string(s, diacritics_dict)
-            click.echo(s2 + "\n")
-    except KeyboardInterrupt:
-        click.echo("\nQuitting string conversion.")
+    if input_str is not None:
+        s = translate_diacritic_alternatives_in_string(input_str, diacritics_dict)
+        click.echo(s)
+    else:
+        try:
+            while True:
+                s = input("string> ")
+                s2 = translate_diacritic_alternatives_in_string(s, diacritics_dict)
+                click.echo(s2 + "\n")
+        except KeyboardInterrupt:
+            click.echo("\nQuitting string conversion.")
 accent.add_command(accent_convert_string)
 
 

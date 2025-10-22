@@ -6,13 +6,9 @@ from collections import Counter, defaultdict, OrderedDict
 from pathlib import Path
 from typing import List, Dict
 
-# terminal color printing
-from colorama import init as colorama_init
-from colorama import Fore, Back, Style
-colorama_init()
-
 from drybones.AnalysisUtil import get_known_analyses, get_known_parses, get_known_glosses, get_analysis_from_user, get_parse_from_user, get_gloss_from_user, get_word_key_from_baseline_word
 from drybones.Cell import Cell
+from drybones.ColorUtil import MAIN_HIGHLIGHT, SUB_HIGHLIGHT
 from drybones.DiacriticDict import DiacriticDict
 from drybones.DiacriticsUtil import get_char_to_alternatives_dict
 from drybones.FileEditingUtil import setup_file_editing_operation, finish_file_editing_operation
@@ -107,14 +103,6 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
     # :q = quit
 
 
-RED = lambda s: Fore.RED + s + Style.RESET_ALL
-GREEN = lambda s: Fore.GREEN + s + Style.RESET_ALL
-YELLOW = lambda s: Fore.YELLOW + s + Style.RESET_ALL
-RED_BACK = lambda s: Back.RED+Fore.BLACK + s + Style.RESET_ALL
-GREEN_BACK = lambda s: Back.GREEN+Fore.BLACK + s + Style.RESET_ALL
-YELLOW_BACK = lambda s: Back.YELLOW+Fore.BLACK + s + Style.RESET_ALL
-
-
 def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_word: dict, known_glosses_by_morpheme: dict, new_lines_by_designation: dict, diacritics_dict: DiacriticDict):
     designation = line.designation
 
@@ -198,7 +186,7 @@ def print_baseline(designation, baseline_text, production_str, judgment_str, wor
     if highlight_word and highlight_morpheme:
         before_words = words[:word_index_to_highlight]
         after_words = words[word_index_to_highlight+1:]
-        morpheme_strs = [YELLOW(x) if i == morpheme_index_to_highlight else GREEN(x) for i,x in enumerate(morphemes)]
+        morpheme_strs = [MAIN_HIGHLIGHT(x) if i == morpheme_index_to_highlight else SUB_HIGHLIGHT(x) for i,x in enumerate(morphemes)]
         word_str = Cell.INTRA_CELL_DELIMITER.join(morpheme_strs)
         word_strs = before_words + [word_str] + after_words
         text = WORD_DELIMITER.join(word_strs)
@@ -206,7 +194,7 @@ def print_baseline(designation, baseline_text, production_str, judgment_str, wor
         before_words = words[:word_index_to_highlight]
         after_words = words[word_index_to_highlight+1:]
         word = words[word_index_to_highlight]
-        word_str = YELLOW(word)
+        word_str = MAIN_HIGHLIGHT(word)
         word_strs = before_words + [word_str] + after_words
         text = WORD_DELIMITER.join(word_strs)
     elif not highlight_word and highlight_morpheme:

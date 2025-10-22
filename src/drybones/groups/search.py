@@ -8,6 +8,7 @@ import shutil
 import re
 import shlex
 from pathlib import Path
+from typing import List
 
 # terminal color printing
 from colorama import init as colorama_init
@@ -20,6 +21,7 @@ from drybones.ProjectUtil import get_corpus_dir
 from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL
 from drybones.SearchResult import SearchResult
+from drybones.StringMatch import StringMatch
 
 
 STRING_MATCH_MARKER = "m/"
@@ -95,6 +97,9 @@ def run_interactive_search_session(lines_from_all_files, diacritic_dict, initial
                 else:
                     row_query, text_query = query_from_user
             except KeyboardInterrupt:
+                click.echo("\n")
+                continue
+            except EOFError:
                 click.echo("\nQuitting search session.")
                 return
         
@@ -116,21 +121,23 @@ def run_search_query(row_query, text_query, lines_from_all_files, diacritic_dict
     # TODO add option for user to require matching diacritics (e.g. imagine searching a corpus of Vietnamese and you don't want all the words that differ only in diacritics from your query)
     convert = lambda s: translate_diacritic_alternatives_in_string(s, diacritic_dict, to_base=True)
 
-    row_match_func = lambda test_str: regex_pattern_matches_input(row_query_stripped, convert(test_str), full_match=row_query_is_match) if row_query_is_regex else string_pattern_matches_input(row_query_stripped, convert(test_str), full_match=row_query_is_match)
-    text_match_func = lambda test_str: regex_pattern_matches_input(text_query_stripped, convert(test_str), full_match=text_query_is_match) if text_query_is_regex else string_pattern_matches_input(text_query_stripped, convert(test_str), full_match=text_query_is_match)
+    row_match_func = lambda test_str: get_regex_matches(row_query_stripped, convert(test_str), full_match=row_query_is_match) if row_query_is_regex else get_string_matches(row_query_stripped, convert(test_str), full_match=row_query_is_match)
+    text_match_func = lambda test_str: get_regex_matches(text_query_stripped, convert(test_str), full_match=text_query_is_match) if text_query_is_regex else get_string_matches(text_query_stripped, convert(test_str), full_match=text_query_is_match)
 
     rows_to_search = []
     for line in lines_from_all_files:
         for row in line.rows:
-            if row_match_func(row.label.string):
+            matches = row_match_func(row.label.string)
+            if len(matches) > 0:
                 tup = (row, line)  # want reference back to the parent line so user can see where it is
                 rows_to_search.append(tup)
 
     search_results = []
     for row, line in rows_to_search:
         contents = row.get_contents()
-        if text_match_func(contents):
-            sr = SearchResult(string=contents, row=row, line=line)
+        matches = text_match_func(contents)
+        if len(matches) > 0:
+            sr = SearchResult(string=contents, spans=[m.span() for m in matches], row=row, line=line)
             search_results.append(sr)
 
     return search_results
@@ -140,7 +147,7 @@ def print_search_results(search_results):
     if len(search_results) > 0:
         click.echo("\nSearch results:\n")
         for i, sr in enumerate(search_results):
-            click.echo(f"{i+1}) {Fore.YELLOW}{DEFAULT_LINE_DESIGNATION_LABEL}: {sr.line.designation} / {sr.row.label.string}:{Style.RESET_ALL} {sr.string}")
+            click.echo(f"{i+1}) {Fore.YELLOW}{DEFAULT_LINE_DESIGNATION_LABEL}: {sr.line.designation} / {sr.row.label.string}:{Style.RESET_ALL} {sr.get_highlighted_string()}")
         click.echo()
     else:
         click.echo("\nNo results found.")
@@ -220,14 +227,25 @@ def strip_single_marker(s, marker):
     return (s[len(marker):], True) if s.startswith(marker) else (s, False)
 
 
-def regex_pattern_matches_input(pattern, test_string, full_match: bool):
-    re_func = re.match if full_match else re.search
-    return re_func(pattern, test_string)
+def get_regex_matches(pattern, test_string, full_match: bool) -> List[re.Match]:
+    if full_match:
+        m = re.fullmatch(pattern, test_string)
+        return [m] if m is not None else []
+    else:
+        # list of re.Match objects
+        return list(re.finditer(pattern, test_string))
 
 
-def string_pattern_matches_input(pattern, test_string, full_match: bool):
-    s_func = (lambda patrn, test_str: patrn == test_str) if full_match else (lambda patrn, test_str: patrn in test_str)
-    return s_func(pattern, test_string)
+def get_string_matches(pattern, test_string, full_match: bool) -> List[StringMatch]:
+    if full_match:
+        return [StringMatch(test_string, 0, len(test_string))] if pattern == test_string else []
+    else:
+        matches = []
+        for i in range(len(test_string) - len(pattern) + 1):
+            substring = test_string[i : i+len(pattern)]
+            if substring == pattern:
+                matches.append(StringMatch(test_string, i, i+len(pattern)))
+        return matches
 
 
 def process_search_results(search_results):
