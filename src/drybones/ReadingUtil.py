@@ -13,11 +13,22 @@ from drybones.LinesAndResidues import LinesAndResidues
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING
 from drybones.Text import Text
+from drybones.StringValidation import validate_string
+from drybones.Validation import Validated, Invalidated
 
 
-def get_drybones_file_from_text_name(text_name: str, corpus_dir: Path) -> Path:
+def get_drybones_file_from_text_name(text_name: str, corpus_dir: Path, key_error_returns_key: bool=False) -> Path:
     name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=False)
-    return name_to_text[text_name].source_fp
+    try:
+        text = name_to_text[text_name]
+    except KeyError as e:
+        if key_error_returns_key:
+            # treat the passed "text_name" string as a filename
+            return Path(text_name)
+        else:
+            raise e
+
+    return text.source_fp
 
 
 def get_lines_and_residues_from_text_name(text_name: str, corpus_dir: Path) -> LinesAndResidues:
@@ -178,3 +189,38 @@ def get_lines_from_all_drybones_files_in_dir(d: Path):
         click.echo(f"loading lines from file {i+1}/{len(name_to_text)}\r", nl=False)
     click.echo()
     return lines
+
+
+def validate_text_name(text_name: str, corpus_dir: Path):
+    text_name_options = get_text_names_in_dir(corpus_dir)
+    validation = validate_string(text_name, text_name_options)
+    if validation is None:
+        return None
+    elif type(validation) is Invalidated:
+        if len(validation.options) > 0:
+            s2 = "Did you mean one of these?\n  " + "\n  ".join(validation.options)
+        else:
+            s2 = "There are no texts in this project yet."
+        click.echo(f"Text name {text_name!r} not recognized. " + s2, err=True)
+    return validation
+
+
+def validate_line_number(line_number, lines, text_name):
+    try:
+        line_number = int(line_number)
+    except (TypeError, ValueError):
+        click.echo(f"Line number should be an integer, but got {line_number!r}.", err=True)
+        return Invalidated()
+
+    if line_number < 1:
+        click.echo(f"Line number must be a positive integer, got {line_number}.", err=True)
+        return Invalidated()
+
+    # check if the text has this many lines
+    try:
+        lines[line_number-1]
+    except IndexError:
+        click.echo(f"Cannot access line {line_number} of text '{text_name}' because it only has {len(lines)} lines.", err=True)
+        return Invalidated()
+    return Validated()
+

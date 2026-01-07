@@ -273,7 +273,7 @@ def process_single_search_result(sr):
     # later can do some stuff here beyond just printing the search result
     # like allowing user to input commands to redo a word analysis, reparse the line, search for some other item found in this line, etc.
 
-    click.echo(sr.to_detailed_display_str())
+    click.echo(sr.to_detailed_display_string())
     click.echo()
 
 

@@ -17,9 +17,10 @@ from drybones.OptionsUtil import get_ordered_suggestions, show_ordered_suggestio
 from drybones.Parse import Parse
 from drybones.ParsingUtil import UNKNOWN_GLOSS, MORPHEME_DELIMITER, WORD_DELIMITER
 from drybones.ProjectUtil import get_corpus_dir
-from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir
+from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir, get_drybones_file_from_text_name, validate_text_name
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING, DEFAULT_BASELINE_LABEL, DEFAULT_TRANSLATION_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_PRODUCTION_LABEL, DEFAULT_JUDGMENT_LABEL
+from drybones.Validation import Validated, Invalidated
 from drybones.WordAnalysis import WordAnalysis
 
 
@@ -46,13 +47,22 @@ from drybones.WordAnalysis import WordAnalysis
 
 
 @click.command()
-@click.argument("drybones_fp", required=True, type=Path)
+@click.argument("text_name", required=True, type=str)
+# @click.argument("drybones_fp", required=True, type=Path)
 @click.argument("line_designation", required=False, type=str)
 @click.option("--shuffle", "-s", type=bool, is_flag=True, help="Shuffle the lines during parsing.")
 @click.option("--overwrite", "-w", type=bool, is_flag=True, help="Overwrite the input file. If false, a separate file will be created.")
 @click.pass_context
-def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
+def parse(ctx, text_name, line_designation, shuffle, overwrite):
     """Parse text contents."""
+    corpus_dir = get_corpus_dir(Path.cwd())
+    text_name_validation = validate_text_name(text_name, corpus_dir)
+    if text_name_validation is None or type(text_name_validation) is Invalidated:
+        return
+    text_name = text_name_validation.match
+    click.echo(f"Parsing text {text_name}", err=True)
+    drybones_fp = get_drybones_file_from_text_name(text_name, corpus_dir)
+
     new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation, initial_hash = setup_file_editing_operation(drybones_fp, overwrite)
 
     if line_designation is not None:
@@ -83,7 +93,6 @@ def parse(ctx, drybones_fp, line_designation, shuffle, overwrite):
         else:
             click.echo(f"This file is already completely parsed and glossed ({len(lines)} lines, {len(lines_with_baselines)} with baselines).")
     else:
-        corpus_dir = get_corpus_dir(drybones_fp)
         lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir)
         known_analyses_by_word = get_known_analyses(lines_from_all_files)
         known_parses_by_word = get_known_parses(known_analyses_by_word)

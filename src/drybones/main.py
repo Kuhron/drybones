@@ -77,6 +77,7 @@ def print_help(ctx=None, subcommand=None):
 from drybones.groups.accent import accent as accent_group
 from drybones.groups.analyze import analyze as analyze_group
 from drybones.groups.config import config as config_group
+from drybones.groups.edit import edit as edit_group
 from drybones.groups.enter import enter as enter_group
 from drybones.groups.map import map as map_group
 from drybones.groups.merge import merge as merge_group
@@ -90,6 +91,7 @@ from drybones.groups.wrap import wrap as wrap_group
 main.add_command(accent_group)
 main.add_command(analyze_group)
 main.add_command(config_group)
+main.add_command(edit_group)
 main.add_command(enter_group)
 main.add_command(map_group)
 main.add_command(merge_group)

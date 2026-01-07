@@ -74,3 +74,6 @@ command name/syntax ideas:
 - dry morpheme show-all  # show all morphemes
 - dry morpheme search  # search for a morpheme
 - dry wrap {string}  # print out the input string with the line delimiters around it
+- dry edit {text name}  # open vim to edit the text file, don't try to implement text editing in drybones itself!
+- dry time {text name} {line number}  # get timestamp of line, for easy annotation of examples in papers/grammar
+- dry add-times {text name}  # add Timestamp row to all lines of text that lack it, and check that any existing Timestamp rows are correct

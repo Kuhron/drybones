@@ -25,7 +25,7 @@ def map(ctx, drybones_fp, mapping, overwrite):
             all_label_strs.add(row.label.string)
     inputs_not_found = sorted([x for x in mapping.keys() if x not in all_label_strs])
     if len(inputs_not_found) > 0:
-        click.echo(f"these row labels were not found: {inputs_not_found}", err=True)
+        click.echo(f"these row labels were not found: {inputs_not_found}\nin {all_label_strs = }", err=True)
         raise click.Abort()
 
     verify_no_clashes(mapping, all_label_strs)
