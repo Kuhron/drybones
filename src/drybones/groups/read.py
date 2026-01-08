@@ -35,6 +35,8 @@ def read(ctx, text_name: str, line_number: int):
         line_numbers_to_read = [line_number]
     
     if line_numbers_to_read is not None:
+        # FIXME it should be by designation, not index
+        raise NotImplementedError("fixme")
         lines = [lines[i-1] for i in line_numbers_to_read]
     if len(lines) > 1:
         print_lines_in_pager(lines)
