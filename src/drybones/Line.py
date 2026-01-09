@@ -2,6 +2,7 @@ import click
 from typing import List
 
 from drybones.Cell import Cell
+from drybones.LineDesignation import LineDesignation
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_BASELINE_LABEL, DEFAULT_LINE_DESIGNATION_LABEL
 from drybones.Validation import Validated, Invalidated, InvalidationError
@@ -12,9 +13,10 @@ class Line:
     BEFORE_LINE = "┌------------┐\n"
     AFTER_LINE  = "\n└------------┘"
 
-    def __init__(self, designation: str, rows: List[Row]):
+    def __init__(self, designation: LineDesignation, rows: List[Row]):
         assert type(rows) is list
         assert all(type(x) is Row for x in rows)
+        assert type(designation) is LineDesignation
         self.designation = designation
         self.designation_row = Line.create_designation_row(self.designation)
         Line.check_no_designation_in_content_rows(rows)
@@ -97,7 +99,8 @@ class Line:
             return s
 
     @staticmethod
-    def create_designation_row(designation_str) -> Row:
+    def create_designation_row(designation: LineDesignation) -> Row:
+        designation_str = designation.to_str()
         cells = [Cell(strs=[designation_str])]
         row = Row(label=DEFAULT_LINE_DESIGNATION_LABEL, cells=cells)
         return row

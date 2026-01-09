@@ -4,11 +4,12 @@
 import click
 from collections import defaultdict
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 from drybones.Cell import Cell
 from drybones.Constants import DRYBONES_FILE_EXTENSION
 from drybones.Line import Line
+from drybones.LineDesignation import LineDesignation
 from drybones.LinesAndResidues import LinesAndResidues
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING
@@ -47,12 +48,17 @@ def get_raw_line_strs_from_file(fp: Path, with_newlines:bool=False) -> List[str]
         return [l[:-1] for l in lines]
 
 
-def get_lines_and_residues_from_drybones_file(fp: Path, enforce_unique_designations:bool=True) -> LinesAndResidues:
+def get_lines_and_residues_from_drybones_file(fp: Path, enforce_unique_designations:bool=True, enforce_same_text_name:bool=True) -> LinesAndResidues:
     line_groups, residues_by_location = get_line_group_strings_from_drybones_file(fp)
     lines = []
     row_labels_by_string = {k:v for k,v in DEFAULT_ROW_LABELS_BY_STRING.items()}
+
     if enforce_unique_designations:
         desigs_seen = set()
+
+    if enforce_same_text_name:
+        text_name = None
+
     for line_group in line_groups:
         line_designation = None
         row_strs = line_group.split("\n")
@@ -76,7 +82,9 @@ def get_lines_and_residues_from_drybones_file(fp: Path, enforce_unique_designati
                 row_labels_by_string[label_str] = label
 
             if label == DEFAULT_LINE_DESIGNATION_LABEL:
-                line_designation = row_text
+                if line_designation is not None:
+                    raise Exception(f"designation already exists in line {line_designation}")
+                line_designation = LineDesignation.from_row_text(row_text)
                 continue  # don't include this in the content rows
 
             if label.is_aligned():
@@ -98,12 +106,21 @@ def get_lines_and_residues_from_drybones_file(fp: Path, enforce_unique_designati
             
             row = Row(label, cells)
             rows.append(row)
+        
         if enforce_unique_designations:
             if line_designation in desigs_seen:
                 click.echo(f"duplicate line designation: {line_designation!r}", err=True)
                 raise click.Abort()
             else:
                 desigs_seen.add(line_designation)
+
+        if enforce_same_text_name:
+            if text_name is None:
+                text_name = line_designation.text_name
+            elif line_designation.text_name != text_name:
+                click.echo(f"text name should be {text_name} but got line with designation: {line_designation!r}", err=True)
+                raise click.Abort()
+        
         line = Line(line_designation, rows)
         lines.append(line)
     # click.echo(f"loaded lines from {fp}")
@@ -191,7 +208,7 @@ def get_lines_from_all_drybones_files_in_dir(d: Path):
     return lines
 
 
-def validate_text_name(text_name: str, corpus_dir: Path):
+def validate_text_name(text_name: str, corpus_dir: Path) -> (Validated | Invalidated | None):
     text_name_options = get_text_names_in_dir(corpus_dir)
     validation = validate_string(text_name, text_name_options)
     if validation is None:
@@ -203,24 +220,4 @@ def validate_text_name(text_name: str, corpus_dir: Path):
             s2 = "There are no texts in this project yet."
         click.echo(f"Text name {text_name!r} not recognized. " + s2, err=True)
     return validation
-
-
-def validate_line_number(line_number, lines, text_name):
-    try:
-        line_number = int(line_number)
-    except (TypeError, ValueError):
-        click.echo(f"Line number should be an integer, but got {line_number!r}.", err=True)
-        return Invalidated()
-
-    if line_number < 1:
-        click.echo(f"Line number must be a positive integer, got {line_number}.", err=True)
-        return Invalidated()
-
-    # check if the text has this many lines
-    try:
-        lines[line_number-1]
-    except IndexError:
-        click.echo(f"Cannot access line {line_number} of text '{text_name}' because it only has {len(lines)} lines.", err=True)
-        return Invalidated()
-    return Validated()
 

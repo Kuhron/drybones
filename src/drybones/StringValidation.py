@@ -44,7 +44,7 @@ def normalized_levenshtein(x, y):
     return d / max_d
 
 
-def validate_string(s: str, options: List[str], case_sensitive:bool=False):
+def validate_string(s: str, options: List[str], case_sensitive:bool=False) -> (Validated | Invalidated | None):
     if case_sensitive:
         s_test = s
         options_test = options
@@ -59,7 +59,8 @@ def validate_string(s: str, options: List[str], case_sensitive:bool=False):
     
     options_test_to_option = dict(zip(options_test, options))
     if s_test in options_test:
-        return Validated(options_test_to_option[s_test])
+        match = options_test_to_option[s_test]
+        return Validated(match)
     else:
         # return a list of top matches so the function calling this can display them with whatever custom message it wants
         # e.g. "X is not a valid {text name / directory / command}, did you mean {options}?"
