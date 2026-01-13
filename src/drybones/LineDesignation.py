@@ -9,11 +9,18 @@ class LineDesignation:
     
     @staticmethod
     def from_row_text(s):
-        text_name, line_name = s.split(LINE_DESIGNATION_SEPARATOR)
+        try:
+            text_name, line_name = s.split(LINE_DESIGNATION_SEPARATOR)
+        except ValueError:
+            text_name = None
+            line_name = s
         return LineDesignation(text_name, line_name)
     
     def to_str(self):
-        return f"{self.text_name}{LINE_DESIGNATION_SEPARATOR}{self.line_name}"
+        if self.text_name is None:
+            return self.line_name
+        else:
+            return f"{self.text_name}{LINE_DESIGNATION_SEPARATOR}{self.line_name}"
 
     def __repr__(self):
         return repr(self.to_str())

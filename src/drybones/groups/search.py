@@ -97,7 +97,7 @@ def run_interactive_search_session(lines_from_all_files, diacritic_dict, initial
                 else:
                     row_query, text_query = query_from_user
             except KeyboardInterrupt:
-                click.echo("\n")
+                click.echo("^C\n")
                 continue
             except EOFError:
                 click.echo("\nQuitting search session.")
@@ -250,11 +250,26 @@ def get_string_matches(pattern, test_string, full_match: bool) -> List[StringMat
 
 def process_search_results(search_results):
     print_search_results(search_results)
+    last_choice = None
     while True:
-        click.echo("Select the number of the result you want to investigate, or to exit the current search you can enter nothing, 'q', or 'quit'.")
+        click.echo("Select the number of the result you want to investigate. To repeat the last choice, enter ';'. To go to the next choice, enter '+'. To exit the current search you can enter nothing, 'q', or 'quit'.")
         raw = prompt("choice")
         if raw in ["", "q", "quit"]:
             return
+        elif raw == "+":
+            # add 1 to last choice
+            if last_choice is None:
+                n = 1
+            else:
+                n = last_choice + 1
+            click.echo(f"choice number: {n}\n")
+        elif raw == ";":
+            # repeat last choice
+            if last_choice is None:
+                click.echo("there is no previous choice to repeat\n")
+            else:
+                n = last_choice
+                click.echo(f"choice number: {n}\n")
         else:
             try:
                 n = int(raw)
@@ -265,6 +280,7 @@ def process_search_results(search_results):
         if 0 <= n-1 < len(search_results):
             chosen_search_result = search_results[n-1]
             process_single_search_result(chosen_search_result)
+            last_choice = n
         else:
             click.echo(f"Number must be between 1 and the number of search results ({len(search_results)}), inclusive.\n")
 
