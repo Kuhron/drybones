@@ -1,0 +1,4 @@
+Why use bottom-up morpheme inference rather than top-down morpheme declaration and assignment of tokens to those morphemes?
+- General preference for bottom-up discovery of structure rather than top-down imposition of analyst opinions.
+- Searching by morpheme could cause you to miss things that you didn't think belonged to that morpheme, but that a regex could catch.
+

@@ -18,7 +18,7 @@ colorama_init()
 from drybones.DiacriticsUtil import get_char_to_alternatives_dict, translate_diacritic_alternatives_in_string
 from drybones.InvalidInput import InvalidInput
 from drybones.ProjectUtil import get_corpus_dir
-from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir
+from drybones.TextUtil import get_lines_from_all_drybones_files_in_dir, get_all_texts_in_dir
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL
 from drybones.SearchResult import SearchResult
 from drybones.StringMatch import StringMatch
@@ -46,7 +46,8 @@ def search(row_query: str, text_query: str, interactive: bool):
 
     corpus_dir = get_corpus_dir(Path.cwd())
     print(f"{corpus_dir = }")
-    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir)
+    name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=True)
+    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir, name_to_text=name_to_text)
     diacritic_dict = get_char_to_alternatives_dict()
     click.echo()  # to add space between the "loaded lines from ..." and the input prompt
 

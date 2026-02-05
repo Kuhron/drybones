@@ -4,8 +4,9 @@ from pathlib import Path
 import click
 
 from drybones.ProjectUtil import get_corpus_dir
-from drybones.ReadingUtil import get_drybones_file_from_text_name, validate_text_name
+from drybones.TextUtil import validate_text_name
 from drybones.StringValidation import validate_string
+from drybones.TextUtil import get_drybones_file_from_text_name, get_all_texts_in_dir
 from drybones.Validation import Validated, Invalidated
 
 
@@ -18,12 +19,13 @@ EDITOR = os.environ.get("EDITOR", "vim")  # https://stackoverflow.com/a/6309753/
 def edit(ctx, text_name: str):
     """Edit the .dry file for a text."""
     corpus_dir = get_corpus_dir(Path.cwd())
-    text_name_validation = validate_text_name(text_name, corpus_dir)
+    name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=False)
+    text_name_validation = validate_text_name(text_name, corpus_dir, name_to_text=name_to_text)
     if text_name_validation is None or type(text_name_validation) is Invalidated:
         return
     text_name = text_name_validation.match
     click.echo(f"Editing text {text_name}", err=True)
-    fp = get_drybones_file_from_text_name(text_name, corpus_dir)
+    fp = get_drybones_file_from_text_name(text_name, corpus_dir, name_to_text=name_to_text)
     open_file_in_editor(fp)
 
 

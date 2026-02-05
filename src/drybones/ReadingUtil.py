@@ -2,7 +2,6 @@
 # but NOT for actually doing any displaying
 
 import click
-from collections import defaultdict
 from pathlib import Path
 from typing import List, Dict
 
@@ -13,28 +12,7 @@ from drybones.LineDesignation import LineDesignation
 from drybones.LinesAndResidues import LinesAndResidues
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_ROW_LABELS_BY_STRING
-from drybones.Text import Text
-from drybones.StringValidation import validate_string
-from drybones.Validation import Validated, Invalidated
 
-
-def get_drybones_file_from_text_name(text_name: str, corpus_dir: Path, key_error_returns_key: bool=False) -> Path:
-    name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=False)
-    try:
-        text = name_to_text[text_name]
-    except KeyError as e:
-        if key_error_returns_key:
-            # treat the passed "text_name" string as a filename
-            return Path(text_name)
-        else:
-            raise e
-
-    return text.source_fp
-
-
-def get_lines_and_residues_from_text_name(text_name: str, corpus_dir: Path) -> LinesAndResidues:
-    fp = get_drybones_file_from_text_name(text_name, corpus_dir)
-    return get_lines_and_residues_from_drybones_file(fp)
 
 
 def get_raw_line_strs_from_file(fp: Path, with_newlines:bool=False) -> List[str]:
@@ -149,75 +127,9 @@ def get_line_group_strings_from_drybones_file(fp: Path):
     return groups, residues_by_location
 
 
-def get_text_from_file(fp: Path, with_contents: bool=True):
-    name = fp.stem  # for now just take name from the filename, but later want it to match the line designations and/or be in some metadata in the text's .dry file itself
-    if with_contents:
-        lines, residues = get_lines_and_residues_from_drybones_file(fp)
-    else:
-        lines, residues = [], []
-    t = Text(name, lines, residues, source_fp=fp)
-    return t
-
-
-def get_text_names_in_dir(d: Path):
-    name_to_text = get_all_texts_in_dir(d, with_contents=False)
-    return list(name_to_text.keys())
-
-
-def get_all_texts_in_dir(d: Path, with_contents: bool=True):
-    fps = get_all_drybones_files_in_dir(d)
-    name_to_text = {}
-    name_to_fps = defaultdict(list)
-    has_duplicates = False
-    for fp in fps:
-        text = get_text_from_file(fp, with_contents=with_contents)
-        name = text.name
-        name_to_fps[name].append(fp)
-        if len(name_to_fps[name]) > 1:
-            has_duplicates = True
-        
-        # if we have any duplicates already, we no longer care about returning the dict of name to text
-        # but we will still check for more duplicates so we can list all of them at once to the user
-        if not has_duplicates:
-            # add this text to the dict that we will return
-            name_to_text[name] = text
-
-    if has_duplicates:
-        click.echo("\nDuplicate text names found:")
-        for name, these_fps in sorted(name_to_fps.items()):
-            if len(these_fps) > 1:
-                click.echo(f"\tText name {name!r}:")
-                for fp in sorted(these_fps):
-                    click.echo(f"\t\t{fp}")
-        raise click.Abort()
-    
-    return name_to_text
-
-
 def get_all_drybones_files_in_dir(d: Path):
     return list(d.glob("**/*" + DRYBONES_FILE_EXTENSION))
 
 
-def get_lines_from_all_drybones_files_in_dir(d: Path):
-    name_to_text = get_all_texts_in_dir(d)
-    lines = []
-    for i, (name, t) in enumerate(name_to_text.items()):
-        lines += t.lines
-        click.echo(f"loading lines from file {i+1}/{len(name_to_text)}\r", nl=False)
-    click.echo()
-    return lines
 
-
-def validate_text_name(text_name: str, corpus_dir: Path) -> (Validated | Invalidated | None):
-    text_name_options = get_text_names_in_dir(corpus_dir)
-    validation = validate_string(text_name, text_name_options)
-    if validation is None:
-        return None
-    elif type(validation) is Invalidated:
-        if len(validation.options) > 0:
-            s2 = "Did you mean one of these?\n  " + "\n  ".join(validation.options)
-        else:
-            s2 = "There are no texts in this project yet."
-        click.echo(f"Text name {text_name!r} not recognized. " + s2, err=True)
-    return validation
 

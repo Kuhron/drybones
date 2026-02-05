@@ -1,5 +1,11 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools>=61.0",
+    "click>=8.1.8",
+    "colorama>=0.4.6",
+    "pympi-ling>=1.71",
+    "PyYAML>=6.0.2",
+]
 build-backend = "setuptools.build_meta"
 
 [project]

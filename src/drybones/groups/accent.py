@@ -43,10 +43,14 @@ accent.add_command(accent_convert_string)
 
 @click.command(name="convert-file")
 @click.argument("input_fp", type=Path, required=True)
-def accent_convert_file(input_fp: Path):
+# @click.option("--skip_raw_rows", "-r", type=bool, is_flag=True, help="If the file is a .dry file, skip any rows whose labels indicate raw data (default False).")
+def accent_convert_file(input_fp: Path, skip_raw_rows:bool=False):
     diacritics_dict = get_char_to_alternatives_dict()
     with open(input_fp) as f:
         contents = f.read()
+    # TODO if it's a .dry file and -r flag is passed, find the raw lines (should ideally have the RowLabel objects with a bool attr for if they are raw or not, or can just see if the label str ends with "Raw" but I like that less) and pass them through to the output unaltered
+    # TODO or maybe better, could do this using `dry accent convert-text [TEXT_NAME]` so it knows it's dealing with a text's .dry file and will avoid the raw rows
+    # TODO once this is implemented, go back through corpus and fix any changed BaselineRaw and TranslationRaw lines
     s = translate_diacritic_alternatives_in_string(contents, diacritics_dict)
     with open(input_fp, "w") as f:
         f.write(s)

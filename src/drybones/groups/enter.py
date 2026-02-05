@@ -6,6 +6,7 @@ import click
 from pathlib import Path
 
 from drybones.Cell import Cell
+from drybones.FileEditingUtil import guard_against_overwriting_existing_file
 from drybones.Line import Line
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel, DEFAULT_ALIGNED_ROW_LABELS, DEFAULT_LINE_DESIGNATION_LABEL
@@ -20,8 +21,7 @@ def enter(text_name):
 
     p = Path(f"texts/{text_name}.dry")
     p.parent.mkdir(exist_ok=True)
-    if p.exists():
-        raise FileExistsError(f"would overwrite text file at {p}")
+    guard_against_overwriting_existing_file(p)
     p.touch()
 
     lines = []

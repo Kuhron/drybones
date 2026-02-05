@@ -10,16 +10,20 @@ class RowLabel:
     PROHIBITED_CHARS = [" ", "\t", "\n", AFTER_LABEL_CHAR, ALL_OTHER_ROWS_CHAR, MULTIPLE_ROWS_SEPARATOR_CHAR]
     PROHIBITED_STRINGS = [RESIDUES_PSEUDO_LABEL]
 
-    def __init__(self, string, aligned: bool):
+    def __init__(self, string, aligned: bool, raw: bool=False):
         assert not any(x in string for x in [" ", "\t", "\n", "\r"]), "whitespace not allowed in row label"
         assert RowLabel.AFTER_LABEL_CHAR not in string, f"do not include '{RowLabel.AFTER_LABEL_CHAR}' when initializing row label"
         assert not any(x in string for x in RowLabel.PROHIBITED_CHARS), f"the label {string!r} contains the following prohibited characters:\n{sorted(set(x for x in string if x in RowLabel.PROHIBITED_CHARS))}"
         assert string not in RowLabel.PROHIBITED_STRINGS, f"the label {string!r} is prohibited"
         self.string = string
         self.aligned = aligned
+        self.raw = raw
 
     def is_aligned(self) -> bool:
         return self.aligned
+    
+    def is_raw_data(self) -> bool:
+        return self.raw
 
     def with_after_label_char(self) -> str:
         return self.string + RowLabel.AFTER_LABEL_CHAR
@@ -52,7 +56,9 @@ class RowLabel:
 
 DEFAULT_LINE_DESIGNATION_LABEL = RowLabel("N", aligned=False)
 DEFAULT_BASELINE_LABEL = RowLabel("Baseline", aligned=True)
+DEFAULT_BASELINE_RAW_LABEL = RowLabel("BaselineRaw", aligned=False, raw=True)
 DEFAULT_TRANSLATION_LABEL = RowLabel("Translation", aligned=False)
+DEFAULT_TRANSLATION_RAW_LABEL = RowLabel("TranslationRaw", aligned=False, raw=True)
 DEFAULT_PARSE_LABEL = RowLabel("Parse", aligned=True)
 DEFAULT_GLOSS_LABEL = RowLabel("Gloss", aligned=True)
 DEFAULT_MORPHEME_CLASS_LABEL = RowLabel("Class", aligned=True)
@@ -60,6 +66,8 @@ DEFAULT_WORD_GLOSS_LABEL = RowLabel("Wordgloss", aligned=True)
 DEFAULT_WORD_CLASS_LABEL = RowLabel("Wordclass", aligned=True)
 DEFAULT_PRODUCTION_LABEL = RowLabel("Production", aligned=False)
 DEFAULT_JUDGMENT_LABEL = RowLabel("Judgment", aligned=False)
+DEFAULT_START_TIME_SECONDS_LABEL = RowLabel("StartTimeSeconds", aligned=False)
+DEFAULT_END_TIME_SECONDS_LABEL = RowLabel("EndTimeSeconds", aligned=False)
 
 DEFAULT_ROW_LABELS = [
     DEFAULT_LINE_DESIGNATION_LABEL,
@@ -70,6 +78,8 @@ DEFAULT_ROW_LABELS = [
     DEFAULT_MORPHEME_CLASS_LABEL,
     DEFAULT_WORD_GLOSS_LABEL,
     DEFAULT_WORD_CLASS_LABEL,
+    DEFAULT_START_TIME_SECONDS_LABEL,
+    DEFAULT_END_TIME_SECONDS_LABEL,
 ]
 
 DEFAULT_ROW_LABELS_BY_STRING = {l.string: l for l in DEFAULT_ROW_LABELS}

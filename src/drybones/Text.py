@@ -7,6 +7,8 @@ from drybones.Line import Line
 from drybones.LineUtil import get_line_designation_to_line_dict_from_list
 
 
+TEXT_NAME_PLACEHOLDER = "TEXT_NAME_PLACEHOLDER"
+
 class Text:
     def __init__(self, name: str, lines: List[Line], residues: List[str], source_fp: Path):
         assert type(lines) is list

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from drybones.Constants import DRYBONES_FILE_EXTENSION
 from drybones.ProjectUtil import get_corpus_dir
-from drybones.ReadingUtil import get_all_texts_in_dir
+from drybones.TextUtil import get_all_texts_in_dir
 
 
 

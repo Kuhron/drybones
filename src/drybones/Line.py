@@ -64,6 +64,12 @@ class Line:
     def __repr__(self):
         return f"<Line {self.designation} {self.rows!r}>"
     
+    def get(self, index, default=None):
+        try:
+            return self[index]
+        except KeyError:
+            return default
+    
     def __getitem__(self, index):
         if type(index) is RowLabel:
             return self.row_by_label.get(index)

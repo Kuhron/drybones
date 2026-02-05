@@ -1,5 +1,6 @@
 import click
 from hashlib import sha256
+from pathlib import Path
 
 from drybones.ReadingUtil import get_lines_and_residues_from_drybones_file
 
@@ -72,3 +73,8 @@ def output_updated_lines(new_lines, residues_by_location, new_drybones_fp, initi
 
     with open(new_drybones_fp, "w") as f:
         f.write(s_to_write)
+
+
+def guard_against_overwriting_existing_file(p: Path):
+    if p.exists():
+        raise FileExistsError(f"would overwrite text file at {p}")

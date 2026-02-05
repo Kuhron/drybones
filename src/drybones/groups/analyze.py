@@ -10,7 +10,7 @@ from drybones.BasicREPL import BasicREPL
 from drybones.DiacriticsUtil import get_char_to_alternatives_dict, translate_diacritic_alternatives_in_string
 from drybones.InvalidInput import InvalidInput
 from drybones.ProjectUtil import get_corpus_dir
-from drybones.ReadingUtil import get_lines_from_all_drybones_files_in_dir
+from drybones.TextUtil import get_lines_from_all_drybones_files_in_dir, get_all_texts_in_dir
 from drybones.REPLUtil import unpack_args, validate_int
 from drybones.WordAnalysis import WordAnalysis
 
@@ -21,7 +21,8 @@ from drybones.WordAnalysis import WordAnalysis
 def analyze(ctx, match_diacritics: bool=False):
     """Show/add/modify analyses for a given wordform."""
     corpus_dir = get_corpus_dir(Path.cwd())
-    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir)
+    name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=True)
+    lines_from_all_files = get_lines_from_all_drybones_files_in_dir(corpus_dir, name_to_text=name_to_text)
     known_analyses_by_word = get_known_analyses(lines_from_all_files, match_diacritics=match_diacritics)
 
     diacritics_dict = get_char_to_alternatives_dict()
