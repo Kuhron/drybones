@@ -1,7 +1,7 @@
 import click
 from pathlib import Path
 
-from drybones.FileEditingUtil import setup_file_editing_operation, finish_file_editing_operation
+from drybones.FileEditingUtil import setup_file_editing_operation, finish_file_editing_operation, guard_against_overwriting_existing_file
 from drybones.Line import Line
 from drybones.Row import Row
 from drybones.RowLabel import RowLabel
@@ -29,15 +29,14 @@ def merge(ctx, input_fp1, rows1, input_fp2, rows2, output_fp):
     """
 
     assert output_fp not in [input_fp1, input_fp2], "output file must be different from input files"
-    if output_fp.exists():
-        raise FileExistsError(output_fp)
+    guard_against_overwriting_existing_file(output_fp)
 
     _new_drybones_fp1, lines1, residues_by_location1, line_designations_in_order1, lines_by_designation1, _initial_hash1 = setup_file_editing_operation(input_fp1, overwrite=False)
     _new_drybones_fp2, lines2, residues_by_location2, line_designations_in_order2, lines_by_designation2, _initial_hash2 = setup_file_editing_operation(input_fp2, overwrite=False)
     # we won't use the hashes to guard against overwriting because this operation makes a new file
 
-    all_labels1 = get_all_row_labels(lines1, exclude_designation=True)
-    all_labels2 = get_all_row_labels(lines2, exclude_designation=True)
+    all_labels1 = get_all_row_labels(lines1)
+    all_labels2 = get_all_row_labels(lines2)
 
     if line_designations_in_order1 != line_designations_in_order2:
         raise ValueError("line designations must match exactly, in the same order")
@@ -80,10 +79,10 @@ def merge(ctx, input_fp1, rows1, input_fp2, rows2, output_fp):
     click.echo("done merging")
 
 
-def get_all_row_labels(lines, exclude_designation=True):
+def get_all_row_labels(lines):
     res = set()
     for line in lines:
-        res |= line.get_all_row_labels(string=True, exclude_designation=exclude_designation)
+        res |= line.get_all_row_labels(string=True)
     return res
 
 

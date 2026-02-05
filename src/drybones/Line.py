@@ -95,10 +95,8 @@ class Line:
             strs.append(s)
         return Line.BEFORE_LINE + "\n".join(strs) + Line.AFTER_LINE
 
-    def get_all_row_labels(self, string=False, exclude_designation=True):
+    def get_all_row_labels(self, string=False):
         s = set(self.row_by_label.keys())
-        if exclude_designation:
-            s.remove(DEFAULT_LINE_DESIGNATION_LABEL)
         if string:
             return {x.string for x in s}
         else:

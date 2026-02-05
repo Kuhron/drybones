@@ -2,6 +2,7 @@ import click
 from hashlib import sha256
 from pathlib import Path
 
+from drybones.FileEditingUtil import guard_against_overwriting_existing_file
 from drybones.ReadingUtil import get_lines_and_residues_from_drybones_file
 
 
@@ -15,8 +16,7 @@ def setup_file_editing_operation(drybones_fp, overwrite):
         initial_hash = sha256(contents).hexdigest()
     else:
         new_drybones_fp = (lambda p: p.parent / (p.stem + "_dryout" + p.suffix))(drybones_fp)
-        if new_drybones_fp.exists():
-            raise FileExistsError(new_drybones_fp)
+        guard_against_overwriting_existing_file(new_drybones_fp)
         
         # don't need to worry about overwriting the input file because we're writing to a different path
         initial_hash = None
