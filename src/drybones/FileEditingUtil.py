@@ -2,7 +2,6 @@ import click
 from hashlib import sha256
 from pathlib import Path
 
-from drybones.FileEditingUtil import guard_against_overwriting_existing_file
 from drybones.ReadingUtil import get_lines_and_residues_from_drybones_file
 
 

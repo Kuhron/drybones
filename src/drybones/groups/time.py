@@ -21,8 +21,7 @@ def time(ctx, text_name: str, line_name: str):
     """View timestamps of line."""
     # TODO figure out how to reduce this boilerplate that's getting repeated in various commands (opening the corpus and verifying the text)
     corpus_dir = get_corpus_dir(Path.cwd())
-    name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=True)
-    text_name_validation = validate_text_name(text_name, corpus_dir, name_to_text=name_to_text)
+    text_name_validation = validate_text_name(text_name, corpus_dir, name_to_text=None)
     if text_name_validation is None or type(text_name_validation) is Invalidated:
         return
     text_name = text_name_validation.match
@@ -43,7 +42,7 @@ def time(ctx, text_name: str, line_name: str):
     if baseline is not None:
         baseline = baseline.get_contents().strip()
 
-    eaf_fp = get_original_transcript_file_from_text_name(text_name, corpus_dir, name_to_text=name_to_text)
+    eaf_fp = get_original_transcript_file_from_text_name(text_name, corpus_dir, name_to_text=None)
     if not eaf_fp.exists():
         click.echo(f"Text {text_name!r} has no original .eaf file; expected to find one at:\n{eaf_fp}", err=True)
         raise click.Abort()

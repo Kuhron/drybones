@@ -17,7 +17,8 @@ def get_all_texts_in_dir(d: Path, with_contents: bool=True):
     name_to_fps = defaultdict(list)
     has_duplicates = False
     for i, fp in enumerate(fps):
-        click.echo(f"loading .dry files in corpus: {i+1}/{len(fps)} files complete\r", nl=False)
+        if with_contents:
+            click.echo(f"loading .dry files in corpus: {i+1}/{len(fps)} files complete\r", nl=False)
         text = get_text_from_file(fp, with_contents=with_contents)
         name = text.name
         name_to_fps[name].append(fp)

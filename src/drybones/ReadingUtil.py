@@ -47,7 +47,7 @@ def get_lines_and_residues_from_drybones_file(fp: Path, enforce_unique_designati
                 continue
             label_str, *row_text_pieces = row_str.split(RowLabel.AFTER_LABEL_CHAR)
             if len(row_text_pieces) == 0:
-                click.echo(f"\nError! in file {fp}\nrow has no label:\n{row_str!r}\n", err=True)
+                click.echo(f"\nError! in file:\n{fp}\n\nin line group:\n{line_group}\n\nrow has no label:\n{row_str!r}\n", err=True)
                 raise click.Abort()
             else:
                 row_text = RowLabel.AFTER_LABEL_CHAR.join(row_text_pieces)
