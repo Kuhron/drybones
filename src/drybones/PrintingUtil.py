@@ -8,7 +8,11 @@ from typing import List
 import drybones.ReadingUtil as ru
 from drybones.DebuggingUtil import get_counter_string
 from drybones.Line import Line
-from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL
+from drybones.RowLabel import RowLabel, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_BASELINE_RAW_LABEL, DEFAULT_BASELINE_LABEL, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_TRANSLATION_LABEL
+
+
+AFTER_LABEL_DELIMITER = " "
+BETWEEN_CELL_STRING_DELIMITER = " | "
 
 
 def get_print_string_of_partial_row(row, column_indices):
@@ -18,29 +22,35 @@ def get_print_string_of_partial_row(row, column_indices):
     raise NotImplementedError
 
 
-def get_print_strings_of_line(line: Line):
+def get_print_strings_of_line(line: Line, row_labels_in_order: list[RowLabel], between_cell_delimiter:str=BETWEEN_CELL_STRING_DELIMITER, with_labels:bool=True, adjust_with_spaces:bool=True):
     terminal_size = os.get_terminal_size()
     right_padding = 1
     terminal_width = terminal_size.columns - right_padding
     n_cells_per_row = max(len(row) for row in line)
-    cell_lists = []
-    row_labels = []
-    for row in line:
+    cell_lists_by_row_label = {}
+    is_aligned_by_row_label = {}
+    seen = set()
+    for row in line.get_all_rows_including_designation():
+        assert row.label not in seen, f"label {row.label} already seen"
+        seen.add(row.label)
         these_cells = [cell.strip() for cell in row] + ["" for i in range(n_cells_per_row - len(row))]
         assert len(these_cells) == n_cells_per_row
-        cell_lists.append(these_cells)
-        label = row.label
-        row_labels.append(label)
+        cell_lists_by_row_label[row.label] = these_cells
+        is_aligned_by_row_label[row.label] = row.is_aligned()
+    cell_lists_in_order = [cell_lists_by_row_label[x] for x in row_labels_in_order]
 
     # makes more sense to have the row object know if it's aligned, rather than passing around a list of which labels are aligned
-    is_aligned_by_index = {j: row.is_aligned() for j, row in enumerate(line)}
 
-    max_label_len = max(len(label.with_after_label_char()) for label in row_labels)
+    max_label_len = max(len(label.with_after_label_char()) for label in row_labels_in_order)
     max_seg_len_by_index = {}
+    is_aligned_by_index = {}
     for i in range(n_cells_per_row):
         display_widths = []
-        for j, these_cells in enumerate(cell_lists):
-            if is_aligned_by_index[j] is True:
+        for j, label in enumerate(row_labels_in_order):
+            these_cells = cell_lists_by_row_label[label]
+            is_aligned = is_aligned_by_row_label[label]
+            is_aligned_by_index[j] = is_aligned
+            if is_aligned is True:
                 display_width = get_display_width(these_cells[i])
                 display_widths.append(display_width)
         if len(display_widths) == 0:
@@ -49,13 +59,13 @@ def get_print_strings_of_line(line: Line):
             this_max_seg_len = max(display_widths)
         max_seg_len_by_index[i] = this_max_seg_len
     
-    after_label_delim = " "
-    general_delim = " | "  # something clearly dividing but not too wide and not intrusive-looking
+    after_label_delim = AFTER_LABEL_DELIMITER
+    general_delim = between_cell_delimiter  # something clearly dividing but not too wide and not intrusive-looking
     after_label_delim_width = get_display_width(after_label_delim)
     general_delim_width = get_display_width(general_delim)
     column_index_groupings = get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_index, after_label_delim_width, general_delim_width, terminal_width)
     desig_str = line.designation_row.to_str(with_label=True)
-    content_strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels)
+    content_strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists_in_order, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels_in_order, with_labels=with_labels, adjust_with_spaces=adjust_with_spaces)
 
     strs = [desig_str] + content_strs
 
@@ -69,17 +79,39 @@ def get_print_strings_of_line(line: Line):
     return strs
 
 
-def get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels):
+def get_print_strings_of_line_for_reading(line: Line):
+    return get_print_strings_of_line(line=line, row_labels_in_order=list(line.get_all_row_labels(string=False)), between_cell_delimiter=BETWEEN_CELL_STRING_DELIMITER, with_labels=True)
+
+
+def get_print_strings_of_line_for_example_formatting(line: Line):
+    row_labels = [
+        DEFAULT_BASELINE_RAW_LABEL,
+        DEFAULT_BASELINE_LABEL,
+        DEFAULT_PARSE_LABEL,
+        DEFAULT_GLOSS_LABEL,
+        DEFAULT_TRANSLATION_LABEL,
+        DEFAULT_LINE_DESIGNATION_LABEL,
+    ]
+    return get_print_strings_of_line(line=line, row_labels_in_order=row_labels, between_cell_delimiter="\t", with_labels=False, adjust_with_spaces=False)
+    
+
+def get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels, with_labels:bool=True, adjust_with_spaces:bool=True):
     strs = []
     group_delim = "- - - - - - - -"
     for column_index_grouping in column_index_groupings:
         for row_i, these_cells in enumerate(cell_lists):
-            label_str = row_labels[row_i].with_after_label_char()
-            s = label_str + after_label_delim
+            if with_labels:
+                label_str = row_labels[row_i].with_after_label_char()
+                s = label_str + after_label_delim
+            else:
+                s = ""
             # click.echo(f"initial s   = {show_whitespace(s)}")
             if is_aligned_by_index[row_i]:
                 for i in column_index_grouping:
-                    s += these_cells[i].ljust(max_seg_len_by_index[i] + sum(is_zero_width(c) for c in these_cells[i]))
+                    if adjust_with_spaces:
+                        s += these_cells[i].ljust(max_seg_len_by_index[i] + sum(is_zero_width(c) for c in these_cells[i]))
+                    else:
+                        s += these_cells[i]
                     # click.echo(f"plus cell   = {show_whitespace(s)}")
                     following_delim = "" if i == column_index_grouping[-1] else general_delim
                     s += following_delim
@@ -171,7 +203,7 @@ def dict_cumsum(d, extra_addends=None):
 def get_print_string_of_lines(lines: List[Line]):
     s = ""
     for line in lines:
-        strs = get_print_strings_of_line(line)
+        strs = get_print_strings_of_line_for_reading(line)
         for x in strs:
             s += x + "\n"
         s += "\n"
@@ -179,7 +211,7 @@ def get_print_string_of_lines(lines: List[Line]):
 
 
 def print_line(line):
-    strs = get_print_strings_of_line(line)
+    strs = get_print_strings_of_line_for_reading(line)
     for s in strs:
         click.echo(s)
 

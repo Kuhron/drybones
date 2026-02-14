@@ -95,12 +95,15 @@ class Line:
             strs.append(s)
         return Line.BEFORE_LINE + "\n".join(strs) + Line.AFTER_LINE
 
-    def get_all_row_labels(self, string=False):
-        s = set(self.row_by_label.keys())
+    def get_all_row_labels(self, string=False) -> set[RowLabel | str]:
+        st = set(self.row_by_label.keys())
         if string:
-            return {x.string for x in s}
+            return {x.string for x in st}
         else:
-            return s
+            return st
+        
+    def get_all_rows_including_designation(self):
+        return [self.designation_row] + self.rows
 
     @staticmethod
     def create_designation_row(designation: LineDesignation) -> Row:
