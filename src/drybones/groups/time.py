@@ -81,7 +81,7 @@ def time(ctx, text_name: str, line_name: str):
                 raise Exception("impossible")
             start_mins, start_secs = ms_to_mins_and_secs(start_ms, rounding_type="floor")
             end_mins, end_secs = ms_to_mins_and_secs(end_ms, rounding_type="ceiling")
-            print(f"{start_ms} - {end_ms} ms | {start_mins}:{start_secs:02d} - {end_mins}:{end_secs:02d} | {match_type_str}")
+            print(f"{start_ms}-{end_ms} ms\n({text_name} {start_mins}:{start_secs:02d}-{end_mins}:{end_secs:02d})\n{match_type_str}")
             match_found = True
     if not match_found:
         click.echo(f"No lines were found that matched\n{DEFAULT_BASELINE_RAW_LABEL.with_after_label_char()} {baseline_raw_to_query}\n{DEFAULT_BASELINE_LABEL.with_after_label_char()} {baseline_to_query}")

@@ -4,6 +4,7 @@ import click
 import os
 import numbers
 from typing import List
+from collections import defaultdict
 
 import drybones.ReadingUtil as ru
 from drybones.DebuggingUtil import get_counter_string
@@ -27,17 +28,28 @@ def get_print_strings_of_line(line: Line, row_labels_in_order: list[RowLabel], b
     right_padding = 1
     terminal_width = terminal_size.columns - right_padding
     n_cells_per_row = max(len(row) for row in line)
-    cell_lists_by_row_label = {}
+    row_label_to_cell_lists = defaultdict(list)
     is_aligned_by_row_label = {}
-    seen = set()
+    
     for row in line.get_all_rows_including_designation():
-        assert row.label not in seen, f"label {row.label} already seen"
-        seen.add(row.label)
         these_cells = [cell.strip() for cell in row] + ["" for i in range(n_cells_per_row - len(row))]
         assert len(these_cells) == n_cells_per_row
-        cell_lists_by_row_label[row.label] = these_cells
+        row_label_to_cell_lists[row.label].append(these_cells)  # for each row with the same label, want the list of its cells
         is_aligned_by_row_label[row.label] = row.is_aligned()
-    cell_lists_in_order = [cell_lists_by_row_label[x] for x in row_labels_in_order]
+    
+    cell_lists_in_order = []
+    row_labels_in_order_including_duplicates = []
+    for label in row_labels_in_order:
+        try:
+            for lst in row_label_to_cell_lists[label]:
+                assert type(lst) is list, type(label)
+                cell_lists_in_order.append(lst)
+                row_labels_in_order_including_duplicates.append(label)
+        except KeyError:
+            missing_str = f"[no row with label {label}]"
+            cell_lists_in_order.append([missing_str])
+            row_label_to_cell_lists[label] = [[missing_str]]
+            row_labels_in_order_including_duplicates.append(label)
 
     # makes more sense to have the row object know if it's aligned, rather than passing around a list of which labels are aligned
 
@@ -46,13 +58,14 @@ def get_print_strings_of_line(line: Line, row_labels_in_order: list[RowLabel], b
     is_aligned_by_index = {}
     for i in range(n_cells_per_row):
         display_widths = []
-        for j, label in enumerate(row_labels_in_order):
-            these_cells = cell_lists_by_row_label[label]
-            is_aligned = is_aligned_by_row_label[label]
-            is_aligned_by_index[j] = is_aligned
-            if is_aligned is True:
-                display_width = get_display_width(these_cells[i])
-                display_widths.append(display_width)
+        for j, label in enumerate(row_labels_in_order_including_duplicates):
+            lsts = row_label_to_cell_lists[label]
+            for these_cells in lsts:
+                is_aligned = is_aligned_by_row_label.get(label, False)
+                is_aligned_by_index[j] = is_aligned
+                if is_aligned is True:
+                    display_width = get_display_width(these_cells[i])
+                    display_widths.append(display_width)
         if len(display_widths) == 0:
             this_max_seg_len = 0  # TODO is this a good idea or should it be None? idk, see what happens, but this could be a source of bugs! it's low stakes because it's just for display but still, #BUGMAKER <-- for ctrl-f'ing for bad/uninformed choices I made that I knew were potential causes of future bugs
         else:
@@ -65,7 +78,7 @@ def get_print_strings_of_line(line: Line, row_labels_in_order: list[RowLabel], b
     general_delim_width = get_display_width(general_delim)
     column_index_groupings = get_column_index_groupings(n_cells_per_row, max_label_len, max_seg_len_by_index, after_label_delim_width, general_delim_width, terminal_width)
     desig_str = line.designation_row.to_str(with_label=True)
-    content_strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists_in_order, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels_in_order, with_labels=with_labels, adjust_with_spaces=adjust_with_spaces)
+    content_strs = get_print_strings_of_line_helper_using_column_index_groupings(column_index_groupings, cell_lists_in_order, is_aligned_by_index, after_label_delim, general_delim, max_seg_len_by_index, row_labels_in_order_including_duplicates, with_labels=with_labels, adjust_with_spaces=adjust_with_spaces)
 
     strs = [desig_str] + content_strs
 
@@ -119,7 +132,7 @@ def get_print_strings_of_line_helper_using_column_index_groupings(column_index_g
                     # s = show_whitespace(s)
             else:
                 if sum(len(x) > 0 for x in these_cells) > 2:
-                    click.echo(f"\nError: non-aligned row shouldn't have any cells other than label and content.\nFor label {label_str!r}, got {these_cells}", err=True)
+                    click.echo(f"\nError: non-aligned row shouldn't have any cells other than label and content.\nFor label {label_str!r}, got {these_cells = !r} of type {type(these_cells)}", err=True)
                     raise click.Abort()
                 s += after_label_delim.join(these_cells)
                 # click.echo(f"non-aligned = {show_whitespace(s)}")
