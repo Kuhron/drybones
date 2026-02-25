@@ -6,7 +6,6 @@ import shutil
 import yaml
 from pathlib import Path
 
-from drybones._version import __version__
 from drybones.DryBonesSession import DryBonesSession
 from drybones.RowLabel import DEFAULT_ALIGNED_ROW_LABELS
 from drybones.Constants import PROG_NAME_FOR_VERSION, PROG_NAME_FOR_COMMAND, DRYBONES_DIR_NAME, GLOBAL_CONFIG_FP, HOME_DIR, PROJECT_CONFIG_FILE_NAME
@@ -19,10 +18,16 @@ STDERR_IS_TTY = sys.stderr.isatty()
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 VERSION_MESSAGE = "%(prog)s, version %(version)s\nSource: https://github.com/Kuhron/drybones"
 
+# Source - https://stackoverflow.com/a/75100875
+# Posted by sinoroc, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-02-25, License - CC BY-SA 4.0
+import importlib.metadata
+__version__ = importlib.metadata.version("drybones")
+
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True)
-# @click.option('--count', default=1, help='Number of greetings.')
+# @click.option('--count', default=1, help='Number of greetings.'-)
 # @click.option('--name', prompt='Your name', help='The person to greet.')
 @click.version_option(__version__, "-v", "--version", prog_name=PROG_NAME_FOR_VERSION, message=VERSION_MESSAGE)
 @click.pass_context

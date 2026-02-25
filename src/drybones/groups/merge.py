@@ -7,6 +7,9 @@ from drybones.Row import Row
 from drybones.RowLabel import RowLabel
 
 
+# FIXME get it to respect when there is more than one row with the same label; in version 0.0.3 it will just take one of them and delete the others
+
+
 @click.command(no_args_is_help=True)
 @click.argument("input_fp1", required=True, type=Path)
 @click.argument("rows1", required=True, type=str)
