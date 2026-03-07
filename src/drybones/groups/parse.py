@@ -52,9 +52,9 @@ from drybones.WordAnalysis import WordAnalysis
 # @click.argument("drybones_fp", required=True, type=Path)
 @click.argument("line_designation", required=False, type=str)
 @click.option("--shuffle", "-s", type=bool, is_flag=True, help="Shuffle the lines during parsing.")
-@click.option("--overwrite", "-w", type=bool, is_flag=True, help="Overwrite the input file. If false, a separate file will be created.")
+@click.option("--write_to_copy", "-c", type=bool, is_flag=True, help="Write to separate file instead of overwriting the source file.")
 @click.pass_context
-def parse(ctx, text_name, line_designation, shuffle, overwrite):
+def parse(ctx, text_name, line_designation, shuffle, write_to_copy):
     """Parse text contents."""
     corpus_dir = get_corpus_dir(Path.cwd())
     name_to_text = get_all_texts_in_dir(corpus_dir, with_contents=True)
@@ -65,7 +65,7 @@ def parse(ctx, text_name, line_designation, shuffle, overwrite):
     click.echo(f"Parsing text {text_name}", err=True)
     drybones_fp = get_drybones_file_from_text_name(text_name, corpus_dir, name_to_text=name_to_text)
 
-    new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation, initial_hash = setup_file_editing_operation(drybones_fp, overwrite)
+    new_drybones_fp, lines, residues_by_location, line_designations_in_order, new_lines_by_designation, initial_hash = setup_file_editing_operation(drybones_fp, overwrite=(not write_to_copy))
 
     if line_designation is not None:
         try:
@@ -115,78 +115,81 @@ def parse(ctx, text_name, line_designation, shuffle, overwrite):
 
 
 def parse_single_line(line: Line, known_analyses_by_word: dict, known_parses_by_word: dict, known_glosses_by_morpheme: dict, new_lines_by_designation: dict, diacritics_dict: DiacriticDict):
-    designation = line.designation
+    if line.is_duplicate():
+        click.echo(f"Line {line.designation} is a duplicate; skipping")
+    else:
+        designation = line.designation
 
-    baseline_row = line[DEFAULT_BASELINE_LABEL]
-    translation_row = line[DEFAULT_TRANSLATION_LABEL]
-    if translation_row is None:
-        click.echo(f"No translation found in line:\n{line}")
-        raise click.Abort()
-    
-    baseline_str = baseline_row.to_str(with_label=False)
-    translation_str = translation_row.to_str()
-
-    production_row = line[DEFAULT_PRODUCTION_LABEL]
-    production_str = production_row.to_str(with_label=False) if production_row is not None else ""
-    judgment_row = line[DEFAULT_JUDGMENT_LABEL]
-    judgment_str = judgment_row.to_str(with_label=False) if judgment_row is not None else ""
-
-    print_baseline(designation, baseline_str, production_str, judgment_str)
-    click.echo(translation_str + "\n")
-
-    new_rows = [row for row in line.rows]
-
-    # TODO update workflow to include word analysis
-    # first show user existing analyses and ask if they want one of those
-    # if not, show existing parses and ask if they want one of those
-    # given whatever parse they chose/made, do the normal flow of glossing each morpheme
-
-    words = [cell.to_str() for cell in baseline_row.cells]
-    parse_cells = []
-    gloss_cells = []
-    for i, word in enumerate(words):
-        print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i)
-        click.echo(translation_str)
-        word = get_word_key_from_baseline_word(word, diacritics_dict, match_diacritics=False)
-
-        if word not in known_analyses_by_word:
-            analysis = None
-        else:
-            analysis = get_analysis_from_user(word, known_analyses_by_word)
-
-        if analysis is not None:
-            parse = analysis.parse
-            glosses = analysis.glosses
-            parse_cell = Cell(strs=parse.morpheme_strs)
-            gloss_cell = Cell(strs=glosses)
-            accepted_analysis = analysis
-        else:
-            parse = get_parse_from_user(word, known_parses_by_word)
-            known_parses_by_word[word][parse] += 1
-            glosses_this_word = []
-            morpheme_strs = parse.morpheme_strs
-            for j, morpheme in enumerate(morpheme_strs):
-                print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i, morphemes=morpheme_strs, morpheme_index_to_highlight=j)
-                click.echo(translation_str)
-                gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
-                known_glosses_by_morpheme[morpheme][gloss_str] += 1
-                glosses_this_word.append(gloss_str)
-            accepted_analysis = WordAnalysis(form_normal=word, form_key=word, parse=parse, glosses=glosses_this_word)
-            parse_cell = Cell(strs=morpheme_strs)
-            gloss_cell = Cell(strs=glosses_this_word)
+        baseline_row = line.get(DEFAULT_BASELINE_LABEL)
+        translation_rows = line.get(DEFAULT_TRANSLATION_LABEL, multiple=True)
+        if len(translation_rows) == 0:
+            click.echo(f"No translation found in line:\n{line}")
+            raise click.Abort()
         
-        known_analyses_by_word[word][accepted_analysis] += 1
-        parse_cells.append(parse_cell)
-        gloss_cells.append(gloss_cell)
-    click.echo()
+        baseline_str = baseline_row.to_str(with_label=False)
+        translation_strs = [x.to_str() for x in translation_rows]
 
-    parse_row = Row(DEFAULT_PARSE_LABEL, parse_cells)
-    gloss_row = Row(DEFAULT_GLOSS_LABEL, gloss_cells)
-    new_rows += [parse_row, gloss_row]
+        production_row = line.get(DEFAULT_PRODUCTION_LABEL)
+        production_str = production_row.to_str(with_label=False) if production_row is not None else ""
+        judgment_row = line.get(DEFAULT_JUDGMENT_LABEL)
+        judgment_str = judgment_row.to_str(with_label=False) if judgment_row is not None else ""
 
-    new_line = Line(designation, new_rows)
-    click.echo(f"new_line:\n{new_line.to_string_for_drybones_file()}\n")
-    new_lines_by_designation[new_line.designation] = new_line
+        print_baseline(designation, baseline_str, production_str, judgment_str)
+        print_translations(translation_strs)
+
+        new_rows = [row for row in line.rows]
+
+        # TODO update workflow to include word analysis
+        # first show user existing analyses and ask if they want one of those
+        # if not, show existing parses and ask if they want one of those
+        # given whatever parse they chose/made, do the normal flow of glossing each morpheme
+
+        words = [cell.to_str() for cell in baseline_row.cells]
+        parse_cells = []
+        gloss_cells = []
+        for i, word in enumerate(words):
+            print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i)
+            print_translations(translation_strs)
+            word = get_word_key_from_baseline_word(word, diacritics_dict, match_diacritics=False)
+
+            if word not in known_analyses_by_word:
+                analysis = None
+            else:
+                analysis = get_analysis_from_user(word, known_analyses_by_word)
+
+            if analysis is not None:
+                parse = analysis.parse
+                glosses = analysis.glosses
+                parse_cell = Cell(strs=parse.morpheme_strs)
+                gloss_cell = Cell(strs=glosses)
+                accepted_analysis = analysis
+            else:
+                parse = get_parse_from_user(word, known_parses_by_word)
+                known_parses_by_word[word][parse] += 1
+                glosses_this_word = []
+                morpheme_strs = parse.morpheme_strs
+                for j, morpheme in enumerate(morpheme_strs):
+                    print_baseline(designation, baseline_str, production_str, judgment_str, words=words, word_index_to_highlight=i, morphemes=morpheme_strs, morpheme_index_to_highlight=j)
+                    print_translations(translation_strs)
+                    gloss_str = get_gloss_from_user(morpheme, known_glosses_by_morpheme)
+                    known_glosses_by_morpheme[morpheme][gloss_str] += 1
+                    glosses_this_word.append(gloss_str)
+                accepted_analysis = WordAnalysis(form_normal=word, form_key=word, parse=parse, glosses=glosses_this_word)
+                parse_cell = Cell(strs=morpheme_strs)
+                gloss_cell = Cell(strs=glosses_this_word)
+            
+            known_analyses_by_word[word][accepted_analysis] += 1
+            parse_cells.append(parse_cell)
+            gloss_cells.append(gloss_cell)
+        click.echo()
+
+        parse_row = Row(DEFAULT_PARSE_LABEL, parse_cells)
+        gloss_row = Row(DEFAULT_GLOSS_LABEL, gloss_cells)
+        new_rows += [parse_row, gloss_row]
+
+        new_line = Line(designation, new_rows)
+        click.echo(f"new_line:\n{new_line.to_string_for_drybones_file()}\n")
+        new_lines_by_designation[new_line.designation] = new_line
     
     return known_analyses_by_word, known_parses_by_word, known_glosses_by_morpheme, new_lines_by_designation
 
@@ -216,3 +219,8 @@ def print_baseline(designation, baseline_text, production_str, judgment_str, wor
     pj_str = "" if production_str == "" and judgment_str == "" else production_str + judgment_str + " "
     click.echo(f"{designation.to_str()}. {pj_str}{text}")
 
+
+def print_translations(translation_strs):
+    for s in translation_strs:
+        click.echo(s)
+    click.echo("")

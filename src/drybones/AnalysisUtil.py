@@ -20,9 +20,9 @@ def get_known_analyses(lines, match_diacritics=False):
     gloss_label = DEFAULT_GLOSS_LABEL
     for l in lines:
         try:
-            baseline_row = l[baseline_label]
-            parse_row = l[parse_label]
-            gloss_row = l[gloss_label]
+            baseline_row = l.get(baseline_label)
+            parse_row = l.get(parse_label)
+            gloss_row = l.get(gloss_label)
             has_baseline = baseline_row is not None
             has_parse = parse_row is not None
             has_gloss = gloss_row is not None

@@ -1,10 +1,11 @@
 import click
 from typing import List
+from collections import defaultdict
 
 from drybones.Cell import Cell
 from drybones.LineDesignation import LineDesignation
 from drybones.Row import Row
-from drybones.RowLabel import RowLabel, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_BASELINE_LABEL, DEFAULT_LINE_DESIGNATION_LABEL
+from drybones.RowLabel import RowLabel, DEFAULT_PARSE_LABEL, DEFAULT_GLOSS_LABEL, DEFAULT_BASELINE_LABEL, DEFAULT_LINE_DESIGNATION_LABEL, DEFAULT_DUPLICATE_LINE_LABEL
 from drybones.Validation import Validated, Invalidated, InvalidationError
 
 # all rows in the line have to have length N (alignable, e.g. glosses) or 1 (non-alignable, e.g. free translation of the whole line)
@@ -22,18 +23,25 @@ class Line:
         Line.check_no_designation_in_content_rows(rows)
         self.rows = rows
         self.validate_row_lengths()
-        self.row_by_label = self.construct_row_by_label()
+        self.rows_by_label = self.construct_rows_by_label()
         self.row_label_by_string = self.construct_row_label_by_string()
 
-    def construct_row_by_label(self):
+    def construct_rows_by_label(self):
         d = {}
         for r in self.rows:
-            d[r.label] = r
+            label = r.label
+            if label.can_occur_multiple_times_in_same_line():
+                if label not in d:
+                    d[label] = []
+                d[label].append(r)
+            else:
+                assert label not in d, f"row with label {label} already present in line {self}"
+                d[label] = r
         return d
     
     def construct_row_label_by_string(self):
         d = {}
-        for label in self.row_by_label.keys():
+        for label in self.rows_by_label.keys():
             s = label.string
             assert s not in d, f"duplicate label string {s!r}"
             d[s] = label
@@ -64,29 +72,46 @@ class Line:
     def __repr__(self):
         return f"<Line {self.designation} {self.rows!r}>"
     
-    def get(self, index, default=None):
-        try:
-            return self[index]
-        except KeyError:
-            return default
-    
+    def get(self, index, multiple:bool=False):
+        # require function call to pass the "multiple" flag to show that the user knows the row label they are asking for could have multiple rows
+
+        label = self.convert_get_index_to_row_label(index)
+        if label is None:  # no row with this label exists in the line
+            if multiple:
+                return []
+            else:
+                return None
+        else:  # the row(/s) exist(s/)
+            if label.can_occur_multiple_times_in_same_line():
+                assert multiple, f"the row label you asked for ({label}) can occur multiple times in the same line, so you need to pass the 'multiple' flag to Line.get() as a reminder to yourself that it will return a list"
+                return self.rows_by_label.get(index, [])
+            else:
+                return self.rows_by_label.get(index, None)
+
     def __getitem__(self, index):
+        raise Exception("use Line.get() instead of subscripting")
+
+    def convert_get_index_to_row_label(self, index):
         if type(index) is RowLabel:
-            return self.row_by_label.get(index)
+            return index
         elif type(index) is str:
-            label = self.row_label_by_string.get(index)
-            if label is None:
-                raise KeyError(f"no row label found with string {index!r}")
-            return self.row_by_label.get(label)
+            return self.row_label_by_string.get(index, None)
         else:
-            raise TypeError(f"invalid type for subscripting Line: {type(index)}")
-    
+            raise TypeError(f"invalid index type for getting row from line: {type(index)}")
+
+    def has_row_with_label(self, label) -> bool:
+        val = self.get(label)
+        if label.can_occur_multiple_times_in_same_line():
+            assert type(val) is list
+            return len(val) > 0
+        else:
+            return val != None
+
     def has_baseline(self) -> bool:
-        baseline_row = self[DEFAULT_BASELINE_LABEL]
-        return baseline_row is not None
+        return self.has_row_with_label(DEFAULT_BASELINE_LABEL)
 
     def is_parsed_and_glossed(self) -> bool:
-        return DEFAULT_PARSE_LABEL in self.row_by_label and DEFAULT_GLOSS_LABEL in self.row_by_label
+        return DEFAULT_PARSE_LABEL in self.rows_by_label and DEFAULT_GLOSS_LABEL in self.rows_by_label
     
     def to_string_for_drybones_file(self) -> str:
         strs = []
@@ -96,7 +121,7 @@ class Line:
         return Line.BEFORE_LINE + "\n".join(strs) + Line.AFTER_LINE
 
     def get_all_row_labels(self, string=False) -> set[RowLabel | str]:
-        st = set(self.row_by_label.keys())
+        st = set(self.rows_by_label.keys())
         if string:
             return {x.string for x in st}
         else:
@@ -119,3 +144,6 @@ class Line:
                 click.echo("Cannot initiate line with designation row as one of the content rows")
                 raise click.Abort()
 
+    def is_duplicate(self):
+        return self.has_row_with_label(DEFAULT_DUPLICATE_LINE_LABEL)
+    

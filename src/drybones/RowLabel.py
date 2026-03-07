@@ -10,7 +10,7 @@ class RowLabel:
     PROHIBITED_CHARS = [" ", "\t", "\n", AFTER_LABEL_CHAR, ALL_OTHER_ROWS_CHAR, MULTIPLE_ROWS_SEPARATOR_CHAR]
     PROHIBITED_STRINGS = [RESIDUES_PSEUDO_LABEL]
 
-    def __init__(self, string, aligned: bool, raw: bool=False):
+    def __init__(self, string, aligned: bool, raw: bool=False, allow_multiple: bool=False):
         assert not any(x in string for x in [" ", "\t", "\n", "\r"]), "whitespace not allowed in row label"
         assert RowLabel.AFTER_LABEL_CHAR not in string, f"do not include '{RowLabel.AFTER_LABEL_CHAR}' when initializing row label"
         assert not any(x in string for x in RowLabel.PROHIBITED_CHARS), f"the label {string!r} contains the following prohibited characters:\n{sorted(set(x for x in string if x in RowLabel.PROHIBITED_CHARS))}"
@@ -18,12 +18,16 @@ class RowLabel:
         self.string = string
         self.aligned = aligned
         self.raw = raw
+        self.allow_multiple = allow_multiple  # can you have more than one of this row in the same line? good for things like notes or alternative translations, but not good for baseline/parse/gloss
 
     def is_aligned(self) -> bool:
         return self.aligned
     
     def is_raw_data(self) -> bool:
         return self.raw
+    
+    def can_occur_multiple_times_in_same_line(self) -> bool:
+        return self.allow_multiple
 
     def with_after_label_char(self) -> str:
         return self.string + RowLabel.AFTER_LABEL_CHAR
@@ -54,32 +58,40 @@ class RowLabel:
         return RowLabel(string, self.aligned)
 
 
-DEFAULT_LINE_DESIGNATION_LABEL = RowLabel("N", aligned=False)
-DEFAULT_BASELINE_LABEL = RowLabel("Baseline", aligned=True)
-DEFAULT_BASELINE_RAW_LABEL = RowLabel("BaselineRaw", aligned=False, raw=True)
-DEFAULT_TRANSLATION_LABEL = RowLabel("Translation", aligned=False)
-DEFAULT_TRANSLATION_RAW_LABEL = RowLabel("TranslationRaw", aligned=False, raw=True)
-DEFAULT_PARSE_LABEL = RowLabel("Parse", aligned=True)
-DEFAULT_GLOSS_LABEL = RowLabel("Gloss", aligned=True)
-DEFAULT_MORPHEME_CLASS_LABEL = RowLabel("Class", aligned=True)
-DEFAULT_WORD_GLOSS_LABEL = RowLabel("Wordgloss", aligned=True)
-DEFAULT_WORD_CLASS_LABEL = RowLabel("Wordclass", aligned=True)
-DEFAULT_PRODUCTION_LABEL = RowLabel("Production", aligned=False)
-DEFAULT_JUDGMENT_LABEL = RowLabel("Judgment", aligned=False)
-DEFAULT_START_TIME_SECONDS_LABEL = RowLabel("StartTimeSeconds", aligned=False)
-DEFAULT_END_TIME_SECONDS_LABEL = RowLabel("EndTimeSeconds", aligned=False)
+DEFAULT_LINE_DESIGNATION_LABEL      = RowLabel("N",                 aligned=False)
+DEFAULT_BASELINE_LABEL              = RowLabel("Baseline",          aligned=True)
+DEFAULT_BASELINE_RAW_LABEL          = RowLabel("BaselineRaw",       aligned=False, raw=True)
+DEFAULT_TRANSLATION_LABEL           = RowLabel("Translation",       aligned=False, allow_multiple=True)
+DEFAULT_TRANSLATION_RAW_LABEL       = RowLabel("TranslationRaw",    aligned=False, raw=True)
+DEFAULT_PARSE_LABEL                 = RowLabel("Parse",             aligned=True)
+DEFAULT_GLOSS_LABEL                 = RowLabel("Gloss",             aligned=True)
+DEFAULT_MORPHEME_CLASS_LABEL        = RowLabel("Class",             aligned=True)
+DEFAULT_WORD_GLOSS_LABEL            = RowLabel("Wordgloss",         aligned=True)
+DEFAULT_WORD_CLASS_LABEL            = RowLabel("Wordclass",         aligned=True)
+DEFAULT_PRODUCTION_LABEL            = RowLabel("Production",        aligned=False)
+DEFAULT_JUDGMENT_LABEL              = RowLabel("Judgment",          aligned=False)
+DEFAULT_START_TIME_SECONDS_LABEL    = RowLabel("StartTimeSeconds",  aligned=False)
+DEFAULT_END_TIME_SECONDS_LABEL      = RowLabel("EndTimeSeconds",    aligned=False)
+DEFAULT_DUPLICATE_LINE_LABEL        = RowLabel("Dup",               aligned=False)  # points to the designation of the line that this one is a duplicate of
+DEFAULT_NOTE_LABEL                  = RowLabel("Note",              aligned=False, allow_multiple=True)
 
 DEFAULT_ROW_LABELS = [
     DEFAULT_LINE_DESIGNATION_LABEL,
     DEFAULT_BASELINE_LABEL,
+    DEFAULT_BASELINE_RAW_LABEL,
     DEFAULT_TRANSLATION_LABEL,
+    DEFAULT_TRANSLATION_RAW_LABEL,
     DEFAULT_PARSE_LABEL,
     DEFAULT_GLOSS_LABEL,
     DEFAULT_MORPHEME_CLASS_LABEL,
     DEFAULT_WORD_GLOSS_LABEL,
     DEFAULT_WORD_CLASS_LABEL,
+    DEFAULT_PRODUCTION_LABEL,
+    DEFAULT_JUDGMENT_LABEL,
     DEFAULT_START_TIME_SECONDS_LABEL,
     DEFAULT_END_TIME_SECONDS_LABEL,
+    DEFAULT_DUPLICATE_LINE_LABEL,
+    DEFAULT_NOTE_LABEL,
 ]
 
 DEFAULT_ROW_LABELS_BY_STRING = {l.string: l for l in DEFAULT_ROW_LABELS}
