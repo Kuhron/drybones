@@ -39,8 +39,10 @@ def time(ctx, text_name: str, line_name: str):
     baseline = line.get(DEFAULT_BASELINE_LABEL)
     if baseline_raw is not None:
         baseline_raw = baseline_raw.get_contents().strip()
+        print(f"{DEFAULT_BASELINE_RAW_LABEL}: {baseline_raw}")
     if baseline is not None:
         baseline = baseline.get_contents().strip()
+        print(f"{DEFAULT_BASELINE_LABEL}: {baseline}")
 
     eaf_fp = get_original_transcript_file_from_text_name(text_name, corpus_dir, name_to_text=None)
     if not eaf_fp.exists():
